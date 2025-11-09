@@ -16,6 +16,7 @@ describe("Item", () => {
 });
 
 describe("Shop", () => {
+
     it("creates an object with with empty items list", () => {
         const items = [];
         const shop = new Shop(items);
@@ -24,6 +25,15 @@ describe("Shop", () => {
         expect(actual.length).toEqual(0);
         expect(Array.isArray(actual)).toBe(true);
     });
+
+    it("creates an object without items param", () => {
+        const shop = new Shop();
+        expect(shop instanceof Shop).toBe(true);
+        const actual = shop.updateQuality();
+        expect(actual.length).toEqual(0);
+        expect(Array.isArray(actual)).toBe(true);
+    });
+
     it("updates the quality correctly after one update", () => {
         const expected = [
             {
