@@ -4,7 +4,8 @@
   "description": "",
   "main": "gilded_rose.js",
   "scripts": {
-    "test": "./node_modules/.bin/jest --watch"
+    "test": "./node_modules/.bin/jest --watch",
+    "cover": "./node_modules/.bin/jest --coverage"
   },
   "keywords": [],
   "author": "",
