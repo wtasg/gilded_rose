@@ -11,32 +11,56 @@ class Shop {
         this.items = items;
     }
     updateQuality() {
-        return this.items.map(({ name, sellIn, quality }) => {
-            if (name === 'Sulfuras, Hand of Ragnaros') {
-                return new Item(name, sellIn, quality);
+        return this.items.map((item) => {
+
+            if (item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert') {
+                if (item.quality > 0) {
+                    if (item.name != 'Sulfuras, Hand of Ragnaros') {
+                        item.quality = item.quality - 1;
+                    }
+                }
+            } else {
+                if (item.quality < 50) {
+                    item.quality = item.quality + 1;
+                    if (item.name == 'Backstage passes to a TAFKAL80ETC concert') {
+                        if (item.sellIn < 11) {
+                            if (item.quality < 50) {
+                                item.quality = item.quality + 1;
+                            }
+                        }
+                        if (item.sellIn < 6) {
+                            if (item.quality < 50) {
+                                item.quality = item.quality + 1;
+                            }
+                        }
+                    }
+                }
             }
-            if (name === 'Aged Brie') {
-                quality += quality < 50 ? 1 : 0;
-                sellIn = sellIn - 1;
-                quality += sellIn < 0 && quality < 50 ? 1 : 0;
-                return new Item(name, sellIn, quality);
+            if (item.name != 'Sulfuras, Hand of Ragnaros') {
+                item.sellIn = item.sellIn - 1;
             }
-            if (name === 'Backstage passes to a TAFKAL80ETC concert') {
-                quality += quality < 50 ? 1 : 0;
-                quality += sellIn < 11 && quality < 50 ? 1 : 0;
-                quality += sellIn < 6 && quality < 50 ? 1 : 0;
-                sellIn = sellIn - 1;
-                quality = sellIn < 0 ? 0 : quality;
-                return new Item(name, sellIn, quality);
+            if (item.sellIn < 0) {
+                if (item.name != 'Aged Brie') {
+                    if (item.name != 'Backstage passes to a TAFKAL80ETC concert') {
+                        if (item.quality > 0) {
+                            if (item.name != 'Sulfuras, Hand of Ragnaros') {
+                                item.quality = item.quality - 1;
+                            }
+                        }
+                    } else {
+                        item.quality = item.quality - item.quality;
+                    }
+                } else {
+                    if (item.quality < 50) {
+                        item.quality = item.quality + 1;
+                    }
+                }
             }
-            quality -= quality > 0 ? 1 : 0;
-            sellIn = sellIn - 1;
-            quality -= sellIn < 0 && quality > 0 ? 1 : 0;
-            return new Item(name, sellIn, quality);
+
+            return item;
         });
     }
 }
-
 module.exports = {
     Item,
     Shop
