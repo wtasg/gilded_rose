@@ -1,82 +1,66 @@
 class Item {
-    constructor(name, sellIn, quality) {
-        this.name = name;
-        this.sellIn = sellIn;
-        this.quality = quality;
-    }
+  constructor(name, sellIn, quality){
+    this.name = name;
+    this.sellIn = sellIn;
+    this.quality = quality;
+  }
 }
 
 class Shop {
-    constructor(items = []) {
-        this.items = items
-            .filter(item =>
-                typeof item.name === "string" &&
-                typeof item.sellIn === "number" &&
-                typeof item.quality === "number"
-            )
-            .map(({ name, sellIn, quality }) => new Item(name.trim(), sellIn, quality))
-            .filter(item => item.name.length > 0);
-
-    }
-
-    #updateAgedBrie(name, sellIn, quality) {
-        quality += (quality < 50) ? 1 : 0;
-        sellIn = sellIn - 1;
-        quality += (sellIn < 0 && quality < 50) ? 1 : 0;
-
-        return new Item(name, sellIn, quality);
-    }
-
-    #updateBackstagePass(name, sellIn, quality) {
-
-        if (quality < 50) {
-            quality = quality + 1;
-            if (sellIn < 11 && quality < 50) {
-                quality = quality + 1;
-            }
-            if (sellIn < 6 && quality < 50) {
-                quality = quality + 1;
-            }
+  constructor(items=[]){
+    this.items = items;
+  }
+  updateQuality() {
+    for (var i = 0; i < this.items.length; i++) {
+      if (this.items[i].name != 'Aged Brie' && this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
+        if (this.items[i].quality > 0) {
+          if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
+            this.items[i].quality = this.items[i].quality - 1;
+          }
         }
-
-        sellIn = sellIn - 1;
-
-        if (sellIn < 0) {
-            quality = 0;
+      } else {
+        if (this.items[i].quality < 50) {
+          this.items[i].quality = this.items[i].quality + 1;
+          if (this.items[i].name == 'Backstage passes to a TAFKAL80ETC concert') {
+            if (this.items[i].sellIn < 11) {
+              if (this.items[i].quality < 50) {
+                this.items[i].quality = this.items[i].quality + 1;
+              }
+            }
+            if (this.items[i].sellIn < 6) {
+              if (this.items[i].quality < 50) {
+                this.items[i].quality = this.items[i].quality + 1;
+              }
+            }
+          }
         }
-
-        return new Item(name, sellIn, quality);
-
+      }
+      if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
+        this.items[i].sellIn = this.items[i].sellIn - 1;
+      }
+      if (this.items[i].sellIn < 0) {
+        if (this.items[i].name != 'Aged Brie') {
+          if (this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
+            if (this.items[i].quality > 0) {
+              if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
+                this.items[i].quality = this.items[i].quality - 1;
+              }
+            }
+          } else {
+            this.items[i].quality = this.items[i].quality - this.items[i].quality;
+          }
+        } else {
+          if (this.items[i].quality < 50) {
+            this.items[i].quality = this.items[i].quality + 1;
+          }
+        }
+      }
     }
-    updateQuality() {
-        return this.items.map(({ name, sellIn, quality }) => {
-            if (name === 'Sulfuras, Hand of Ragnaros') {
-                return new Item(name, sellIn, quality);
-            }
-            if (quality < 0) {
-                return new Item(name, sellIn - 1, quality);
-            }
 
-            if (name === "Aged Brie") {
-                return this.#updateAgedBrie(name, sellIn, quality);
-            }
-
-            if (name === 'Backstage passes to a TAFKAL80ETC concert') {
-                return this.#updateBackstagePass(name, sellIn, quality);
-            }
-
-            quality = Math.max(0, quality - 1);
-            sellIn = sellIn - 1;
-            if (sellIn < 0) {
-                quality = Math.max(0, quality - 1);
-            }
-
-            return new Item(name, sellIn, quality);
-        });
-    }
+    return this.items;
+  }
 }
-
 module.exports = {
-    Item,
-    Shop
+  Item,
+  Shop
 }

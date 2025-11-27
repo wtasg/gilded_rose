@@ -1,7 +1,5 @@
 const { test, expect, beforeEach } = require("@jest/globals");
 const { Item, Shop } = require("./gilded_rose.js");
-//     expect(2 + 2).toBe(4);
-// });
 
 let ALL_ITEMS;
 beforeEach(() => {
