@@ -1174,9 +1174,7 @@ dist-ssr/
 *.local
 
 ## note taking apps
-**/.obsidian/appearance.json
-**/.obsidian/graph.json
-**/.obsidian/workspace.json
+.obsidian/
 .logseq/
 
 # nyc coverage

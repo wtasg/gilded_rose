@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "l33tc0d3",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "scripts": {
     "test": "./node_modules/.bin/jasmine"
@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@types/jasmine": "^5.1.13",
+    "@types/node": "^24.10.1",
     "jasmine": "^5.12.0"
   }
 }
