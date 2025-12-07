@@ -1,0 +1,18 @@
+{
+  "name": "aoc2025",
+  "version": "1.0.0",
+  "description": "",
+  "main": "problem-1.star-1.js",
+  "scripts": {
+    "test": "./node_modules/.bin/jasmine"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/jasmine": "^5.1.13",
+    "@types/node": "^24.10.1",
+    "jasmine": "^5.13.0"
+  }
+}
