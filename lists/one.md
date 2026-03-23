@@ -28,11 +28,11 @@
 | 24 | Sum of first N numbers | 2026.03.20 | | | | |
 | 25 | Factorial of N numbers | 2026.03.20 | | | | |
 | 26 | Reverse an array | 2026.03.20 | | | | |
-| 27 | Check if a string is palindrome or not | | | | | |
+| 27 | Check if a string is palindrome or not | 2026.03.23 | | | | leetcode-go.md#125 |
 | 28 | Fibonacci Number | | | | | |
 | 29 | Hashing Theory | | | | | |
-| 30 | Counting frequencies of array elements | | | | | |
-| 31 | Find the highest/lowest frequency element | | | | | |
+| 30 | Counting frequencies of array elements | 2026.03.23 | | | | leetcode-go.md#3005 |
+| 31 | Find the highest/lowest frequency element | 2026.03.23 | | | | leetcode-go.md#169 |
 | 32 | Selection Sort | | | | | |
 | 33 | Bubble Sort | | | | | |
 | 34 | Insertion Sort | | | | | |
