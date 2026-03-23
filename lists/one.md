@@ -33,8 +33,8 @@
 | 29 | Hashing Theory | | | | | |
 | 30 | Counting frequencies of array elements | 2026.03.23 | | | | leetcode-go.md#3005 |
 | 31 | Find the highest/lowest frequency element | 2026.03.23 | | | | leetcode-go.md#169 |
-| 32 | Selection Sort | | | | | |
-| 33 | Bubble Sort | | | | | |
+| 32 | Selection Sort | 2026.03.23 | | | | |
+| 33 | Bubble Sort | 2026.03.23 | | | | |
 | 34 | Insertion Sort | | | | | |
 | 35 | Merge Sort | | | | | |
 | 36 | Recursive Bubble Sort | | | | | |
@@ -457,3 +457,31 @@
 | 453 | Shortest Palindrome | | | | | |
 | 454 | Longest happy prefix | | | | | |
 | 455 | Count palindromic subsequence | | | | | |
+
+## Solutions
+
+### 32 #sort/selection
+
+```javascript
+// ascending; select minimum
+for(let i = 0; i < arr.length - 1; i++) {
+    let min = i;
+    for(let j = i+1; j < arr.length; j++) {
+        if(arr[min] > arr[j]) {
+            min = j
+        }
+    }
+    [arr[min], arr[i]] = [arr[i], arr[min]]
+}
+
+// ascending; select maximum
+for(let i = arr.length - 1; i > 0; i--) {
+    let max = i;
+    for(let j = i-1; j >= 0; j--) {
+        if(arr[max] < arr[j]) {
+            max = j
+        }
+    }
+    [arr[max], arr[i]] = [arr[i], arr[max]]
+}
+```
