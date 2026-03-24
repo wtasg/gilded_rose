@@ -35,7 +35,7 @@
 | 31 | Find the highest/lowest frequency element | 2026.03.23 | | | | leetcode-go.md#169 |
 | 32 | Selection Sort | 2026.03.23 | | | | |
 | 33 | Bubble Sort | 2026.03.23 | | | | |
-| 34 | Insertion Sort | | | | | |
+| 34 | Insertion Sort | 2026.03.24 | | | | |
 | 35 | Merge Sort | | | | | |
 | 36 | Recursive Bubble Sort | | | | | |
 | 37 | Recursive Insertion Sort | | | | | |
