@@ -17,7 +17,7 @@
 | 13 | Count Digits | | | | | |
 | 14 | Reverse a Number | | | | | |
 | 15 | Check Palindrome | | | | | |
-| 16 | GCD Or HCF | | | | | |
+| 16 | GCD Or HCF | 2026.03.26 | | | | |
 | 17 | Armstrong Numbers | | | | | |
 | 18 | Print all Divisors | | | | | |
 | 19 | Check for Prime | | | | | |
@@ -37,15 +37,15 @@
 | 33 | Bubble Sort | 2026.03.23 | | | | |
 | 34 | Insertion Sort | 2026.03.24 | | | | |
 | 35 | Merge Sort | | | | | |
-| 36 | Recursive Bubble Sort | | | | | |
+| 36 | Recursive Bubble Sort | 2026.03.25 | | | | |
 | 37 | Recursive Insertion Sort | | | | | |
 | 38 | Quick Sort | | | | | |
-| 39 | Largest Element in an Array | | | | | |
-| 40 | Second Largest Element in an Array without sorting | | | | | |
+| 39 | Largest Element in an Array | 2026.03.25 | | | | |
+| 40 | Second Largest Element in an Array without sorting | 2026.03.25 | | | | |
 | 41 | Check if the array is sorted | | | | | |
 | 42 | Remove duplicates from Sorted array | | | | | |
-| 43 | Left Rotate an array by one place | | | | | |
-| 44 | Left rotate an array by D places | | | | | |
+| 43 | Left Rotate an array by one place | 2026.03.26 | | | | |
+| 44 | Left rotate an array by D places | 2026.03.26 | | | | |
 | 45 | Move Zeros to end | | | | | |
 | 46 | Linear Search | | | | | |
 | 47 | Find the Union | | | | | |
@@ -54,7 +54,7 @@
 | 50 | Find number that appears once, others twice. | | | | | |
 | 51 | Longest subarray with given sum K(positives) | | | | | |
 | 52 | Longest subarray with sum K (Pos + Neg) | | | | | |
-| 53 | 2Sum Problem | | | | | |
+| 53 | 2Sum Problem | 2026.03.26 | | | | |
 | 54 | Sort an array of 0's 1's and 2's | | | | | |
 | 55 | Majority Element (>n/2 times) | | | | | |
 | 56 | Kadane's Algorithm, maximum subarray sum | | | | | |
@@ -460,6 +460,22 @@
 
 ## Solutions
 
+### 16 GCD / GCF / HCF
+
+Sum of first n numbers: `(2a + (n - 1)d)/2` or `n*(a+l)/2`
+Last term: `a + (n-1)d`
+Number of terms: `((L - a)/d) + 1`
+Sum of first n numbers: `(n*(n+1))/2`
+Sum of first n even numbers: `n*(n+1)`
+Sum of first n odd numbers: `n^2`
+
+```haskell
+gcd:: a -> a -> a
+gcd m 0 => m
+gcd 0 n => n
+gcd m n => gcd n m%n
+```
+
 ### 32 #sort/selection
 
 ```javascript
@@ -485,3 +501,46 @@ for(let i = arr.length - 1; i > 0; i--) {
     [arr[max], arr[i]] = [arr[i], arr[max]]
 }
 ```
+
+### 39 Largest
+
+Array doesn't have to be sorted.
+
+### 40 Second largest
+
+Assumptions:
+
+1. Can numbers repeat or not
+2. Do largest and second largest have to be different numbers
+
+### 41 Check if array is sorted
+
+1. Check for non-increasing or non-decreasing
+2. Write two separate functions and then merge them depending upon array initial values
+
+### 43 Rotate Array Leftward by 1
+
+`[0]` will be `shifted` and `pushed` i.e. `arr.push(arr.shift())`
+
+Observation: For an once left rotated non-decreasing array, the right most index will contain the smallest number.
+
+### 44 Rotate Array Leftward by k
+
+Observation: for `k == 0` and `k == arr.length` the array will be same.
+
+```javascript
+[...arr.slice(k % arr.length), ...arr.slice(0, k % arr.length)]
+```
+
+### 53 Two Sum
+
++ Brute force: two nested loops, add numbers and check against target. Slow.
++ Map `Map:: int -> int`: Use a `(target - num[i]) => i` map. Fast.
+
+### 55 Majority Element #voting
+
++ Use Bayer-Moore majority voting algorithm
+
+### 68 Majority Element #voting
+
++ Use Misra-Gries majority voting algorithm
