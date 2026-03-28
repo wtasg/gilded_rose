@@ -1,7 +1,6 @@
 package main
 
-import "fmt"
-
+// BubbleSortR implements recursive bubble sort algorithm (alternative implementation)
 func BubbleSortR(arr []int, n int) {
 	if n == 1 {
 		return
@@ -12,14 +11,4 @@ func BubbleSortR(arr []int, n int) {
 		}
 	}
 	BubbleSortR(arr, n-1)
-}
-
-func test1() {
-	arr := []int{5, 1, 4, 2, 8, -1}
-	BubbleSortR(arr, len(arr))
-	fmt.Println("Sorted array:", arr)
-}
-
-func main() {
-	test1()
 }

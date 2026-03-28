@@ -1,11 +1,9 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
-func palindrome2(s string) bool {
+// CheckPalindromeStringAlt checks if a string is a palindrome (case-insensitive) using two-pointer approach
+func CheckPalindromeStringAlt(s string) bool {
 	runes := []rune(s)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		if !strings.EqualFold(string(runes[i]), string(runes[j])) {
@@ -13,9 +11,4 @@ func palindrome2(s string) bool {
 		}
 	}
 	return true
-}
-
-func main() {
-	fmt.Println(palindrome2("MadaM"))
-	fmt.Println(palindrome2("Madam"))
 }

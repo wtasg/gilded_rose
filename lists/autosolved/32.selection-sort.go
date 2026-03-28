@@ -1,8 +1,7 @@
 package main
 
-import "fmt"
-
-func selectionSort(arr []int) []int {
+// SelectionSort implements the selection sort algorithm
+func SelectionSort(arr []int) []int {
 	newArr := make([]int, len(arr))
 	copy(newArr, arr)
 
@@ -16,14 +15,4 @@ func selectionSort(arr []int) []int {
 		newArr[i], newArr[min] = newArr[min], newArr[i]
 	}
 	return newArr
-}
-
-func main() {
-	testSelectionSort()
-}
-
-func testSelectionSort() {
-	arr := []int{64, 25, 12, 22, 11}
-	sortedArr := selectionSort(arr)
-	fmt.Printf("Original array: %v,  Sorted array: %v\n", arr, sortedArr)
 }

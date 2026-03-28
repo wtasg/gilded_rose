@@ -56,7 +56,7 @@
 | 52 | Longest subarray with sum K (Pos + Neg) | | | | | |
 | 53 | 2Sum Problem | 2026.03.26 | | | | |
 | 54 | Sort an array of 0's 1's and 2's | | | | | |
-| 55 | Majority Element (>n/2 times) | | | | | |
+| 55 | Majority Element (>n/2 times) | 2026.03.24 | | | | |
 | 56 | Kadane's Algorithm, maximum subarray sum | | | | | |
 | 57 | subarray with maximum subarray sum | | | | | |
 | 58 | Stock Buy and Sell | | | | | |
@@ -69,7 +69,7 @@
 | 65 | Print the matrix in spiral manner | | | | | |
 | 66 | Count subarrays with given sum | | | | | |
 | 67 | Pascal's Triangle | | | | | |
-| 68 | Majority Element (n/3 times) | | | | | |
+| 68 | Majority Element (n/3 times) | 2026.03.27 | | | | |
 | 69 | 3-Sum Problem | | | | | |
 | 70 | 4-Sum Problem | | | | | |
 | 71 | Largest Subarray with 0 Sum | | | | | |
@@ -544,3 +544,5 @@ Observation: for `k == 0` and `k == arr.length` the array will be same.
 ### 68 Majority Element #voting
 
 + Use Misra-Gries majority voting algorithm
++ [68.one-third-majority-1.go](./one-go/68.one-third-majority-1.go)
+
