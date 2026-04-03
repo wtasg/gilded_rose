@@ -12,6 +12,7 @@ Regular practice exercises.
 
 ## structure
 
+```text
 .
 ├── named-algorithms.md
 ├── aoc2025
@@ -27,6 +28,7 @@ Regular practice exercises.
 ├── quiz
 ├── README.md
 └── tsconfig.json
+```
 
 ## Eternal Cycle Of Learning
 
