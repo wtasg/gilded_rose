@@ -1,4 +1,4 @@
-# Algorithms
+# Named Algorithms
 
 ## Voting
 
@@ -27,37 +27,37 @@ import "fmt"
 // Memory Complexity: O(1)
 // Time Complexity: O(n)
 func BoyerMooreStream(stream <-chan int) int {
-	var candidate int
-	count := 0
+ var candidate int
+ count := 0
 
-	for val := range stream {
-		if count == 0 {
-			candidate = val
-			count = 1
-		} else if val == candidate {
-			count++
-		} else {
-			count--
-		}
-	}
+ for val := range stream {
+  if count == 0 {
+   candidate = val
+   count = 1
+  } else if val == candidate {
+   count++
+  } else {
+   count--
+  }
+ }
 
-	return candidate
+ return candidate
 }
 
 func main() {
-	// Simulate a data stream
-	stream := make(chan int)
+ // Simulate a data stream
+ stream := make(chan int)
 
-	go func() {
-		data := []int{2, 2, 1, 1, 1, 2, 2}
-		for _, d := range data {
-			stream <- d
-		}
-		close(stream)
-	}()
+ go func() {
+  data := []int{2, 2, 1, 1, 1, 2, 2}
+  for _, d := range data {
+   stream <- d
+  }
+  close(stream)
+ }()
 
-	result := BoyerMooreStream(stream)
-	fmt.Printf("The majority candidate is: %d\n", result)
+ result := BoyerMooreStream(stream)
+ fmt.Printf("The majority candidate is: %d\n", result)
 }
 ```
 
@@ -79,47 +79,45 @@ import "fmt"
 // MisraGries finds candidates that appear more than 1/k of the time.
 // It uses O(k) space.
 func MisraGries(stream <-chan int, k int) map[int]int {
-	// We store at most k-1 candidates
-	candidates := make(map[int]int)
+ // We store at most k-1 candidates
+ candidates := make(map[int]int)
 
-	for val := range stream {
-		// Case A: Element already exists
-		if _, exists := candidates[val]; exists {
-			candidates[val]++
-		} else if len(candidates) < k-1 {
-			// Case B: Space available for new candidate
-			candidates[val] = 1
-		} else {
-			// Case C: Map is full, decrement everyone
-			for item := range candidates {
-				candidates[item]--
-				if candidates[item] == 0 {
-					delete(candidates, item)
-				}
-			}
-		}
-	}
+ for val := range stream {
+  // Case A: Element already exists
+  if _, exists := candidates[val]; exists {
+   candidates[val]++
+  } else if len(candidates) < k-1 {
+   // Case B: Space available for new candidate
+   candidates[val] = 1
+  } else {
+   // Case C: Map is full, decrement everyone
+   for item := range candidates {
+    candidates[item]--
+    if candidates[item] == 0 {
+     delete(candidates, item)
+    }
+   }
+  }
+ }
 
-	return candidates
+ return candidates
 }
 
 func main() {
-	// Let's find elements appearing > 1/4 of the time (k=4)
-	// Candidates map will hold at most 3 items.
-	dataStream := make(chan int)
-	go func() {
-		data := []int{1, 2, 1, 2, 3, 4, 1, 2, 1, 2, 5, 6}
-		for _, v := range data {
-			dataStream <- v
-		}
-		close(dataStream)
-	}()
+ // Let's find elements appearing > 1/4 of the time (k=4)
+ // Candidates map will hold at most 3 items.
+ dataStream := make(chan int)
+ go func() {
+  data := []int{1, 2, 1, 2, 3, 4, 1, 2, 1, 2, 5, 6}
+  for _, v := range data {
+   dataStream <- v
+  }
+  close(dataStream)
+ }()
 
-	k := 4
-	results := MisraGries(dataStream, k)
+ k := 4
+ results := MisraGries(dataStream, k)
 
-	fmt.Printf("Potential Heavy Hitters (> 1/%d): %v\n", k, results)
+ fmt.Printf("Potential Heavy Hitters (> 1/%d): %v\n", k, results)
 }
 ```
-
-## Sorting

@@ -331,12 +331,12 @@
 | 327 | Two Sum In BST | Sum K | | | | |
 | 328 | Recover BST | Swapped nodes | | | | |
 | 329 | Largest BST in Binary Tree | | | | | |
-| 330 | Graph and Types | | | | | |
-| 331 | Graph Representation | C++ | | | | |
-| 332 | Graph Representation | Java | | | | |
+| 330 | Graph and Types | 2026.04.02 | | | | |
+| 331 | Graph Representation | | | | | C++ |
+| 332 | Graph Representation | | | | | Java |
 | 333 | Connected Components logic | | | | | |
-| 334 | BFS | | | | | |
-| 335 | DFS | | | | | |
+| 334 | BFS | 2026.04.03 | | | | |
+| 335 | DFS | 2026.04.03 | | | | |
 | 336 | Number of provinces | | | | | |
 | 337 | Connected Components in Matrix | | | | | |
 | 338 | Rotten Oranges | | | | | |
@@ -545,4 +545,3 @@ Observation: for `k == 0` and `k == arr.length` the array will be same.
 
 + Use Misra-Gries majority voting algorithm
 + [68.one-third-majority-1.go](./one-go/68.one-third-majority-1.go)
-
