@@ -24,3 +24,9 @@ for key, value := range m {
     //...
 }
 ```
+
+```ts
+for (const [key, value] of Object.entries(m)) {
+  // ...
+}
+```

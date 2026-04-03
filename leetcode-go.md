@@ -50,6 +50,28 @@ func recur(s []rune, i int, j int) bool {
 }
 ```
 
+```ts
+function isPalindrome(s: string): boolean {
+  const clean = s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  let i = 0, j = clean.length - 1;
+  while (i < j) {
+    if (clean[i] !== clean[j]) return false;
+    i++; j--;
+  }
+  return true;
+}
+
+function isPalindromeRecursive(s: string): boolean {
+  const arr = s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().split('');
+  function recur(i: number, j: number): boolean {
+    if (i >= j) return true;
+    if (arr[i] !== arr[j]) return false;
+    return recur(i + 1, j - 1);
+  }
+  return recur(0, arr.length - 1);
+}
+```
+
 ### 169
 
 ```golang
@@ -70,6 +92,22 @@ func majorityElement(nums []int) int {
 }
 ```
 
+```ts
+function majorityElement(nums: number[]): number {
+  let count = 1;
+  let ele = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    if (ele === nums[i]) count++;
+    else count--;
+    if (count === 0) {
+      ele = nums[i];
+      count = 1;
+    }
+  }
+  return ele;
+}
+```
+
 ## 1700s
 
 ### 1732
@@ -85,6 +123,18 @@ func largestAltitude(gain []int) int {
   }
  }
  return maxAlt
+}
+```
+
+```ts
+function largestAltitude(gain: number[]): number {
+  let alt = 0;
+  let maxAlt = 0;
+  for (const v of gain) {
+    alt += v;
+    if (alt > maxAlt) maxAlt = alt;
+  }
+  return maxAlt;
 }
 ```
 
@@ -118,4 +168,23 @@ func maxFrequencyElements(nums []int) int {
  return maxVal * maxKey
 }
 
+```
+
+```ts
+function maxFrequencyElements(nums: number[]): number {
+  const freq = new Map<number, number>();
+  for (const v of nums) freq.set(v, (freq.get(v) ?? 0) + 1);
+  const freqfreq = new Map<number, number>();
+  for (const v of freq.values()) freqfreq.set(v, (freqfreq.get(v) ?? 0) + 1);
+
+  let maxVal = -Infinity;
+  let maxKey = -Infinity;
+  for (const [key, val] of freqfreq.entries()) {
+    if (key > maxKey) {
+      maxKey = key;
+      maxVal = val;
+    }
+  }
+  return maxVal * maxKey;
+}
 ```

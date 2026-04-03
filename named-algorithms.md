@@ -61,6 +61,28 @@ func main() {
 }
 ```
 
+```ts
+function boyerMooreStream(stream: Iterable<number>): number {
+    let candidate = 0;
+    let count = 0;
+    for (const val of stream) {
+        if (count === 0) {
+            candidate = val;
+            count = 1;
+        } else if (val === candidate) {
+            count++;
+        } else {
+            count--;
+        }
+    }
+    return candidate;
+}
+
+// Example usage
+const dataStream = [2, 2, 1, 1, 1, 2, 2];
+console.log('The majority candidate is:', boyerMooreStream(dataStream));
+```
+
 ### Misra-Gries
 
 - [wiki](https://en.wikipedia.org/wiki/Misra%E2%80%93Gries_summary)
@@ -120,4 +142,28 @@ func main() {
 
  fmt.Printf("Potential Heavy Hitters (> 1/%d): %v\n", k, results)
 }
+```
+
+```ts
+function misraGries(stream: Iterable<number>, k: number): Map<number, number> {
+    const candidates = new Map<number, number>();
+    for (const val of stream) {
+        if (candidates.has(val)) {
+            candidates.set(val, (candidates.get(val) ?? 0) + 1);
+        } else if (candidates.size < k - 1) {
+            candidates.set(val, 1);
+        } else {
+            for (const key of Array.from(candidates.keys())) {
+                const newCount = (candidates.get(key) ?? 0) - 1;
+                if (newCount <= 0) candidates.delete(key);
+                else candidates.set(key, newCount);
+            }
+        }
+    }
+    return candidates;
+}
+
+// Example usage
+const data = [1, 2, 1, 2, 3, 4, 1, 2, 1, 2, 5, 6];
+console.log('Potential Heavy Hitters (> 1/4):', [...misraGries(data, 4).entries()]);
 ```

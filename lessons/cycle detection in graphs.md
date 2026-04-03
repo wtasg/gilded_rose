@@ -312,3 +312,34 @@ func hasCycle(graph [][]int) bool {
     return false
 }
 ```
+
+```ts
+function hasCycle(graph: number[][]): boolean {
+    const n = graph.length;
+    const visited = new Array<boolean>(n).fill(false);
+    const rec = new Array<boolean>(n).fill(false);
+
+    function dfs(u: number): boolean {
+        visited[u] = true;
+        rec[u] = true;
+        for (const v of graph[u]) {
+            if (!visited[v]) {
+                if (dfs(v)) {
+                    return true;
+                }
+            } else if (rec[v]) {
+                return true;
+            }
+        }
+        rec[u] = false;
+        return false;
+    }
+
+    for (let i = 0; i < n; i++) {
+        if (!visited[i] && dfs(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+```
