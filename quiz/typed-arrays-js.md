@@ -37,64 +37,64 @@ Typed Arrays excel in high-throughput, memory-sensitive environments: `ImageData
 
 ### MCQ
 
-1. What is the primary role of an `ArrayBuffer` in JavaScript?
-   A) To store dynamic JavaScript objects
-   B) To act as a raw, fixed-size binary data container
-   C) To automatically handle endianness conversion
+1. What is the primary role of an `ArrayBuffer` in JavaScript?\
+   A) To store dynamic JavaScript objects\
+   B) To act as a raw, fixed-size binary data container\
+   C) To automatically handle endianness conversion\
    D) To provide array manipulation methods like `push()`
 
-2. Which Typed Array is specifically optimized for image pixel data?
-   A) `Uint16Array`
-   B) `Float32Array`
-   C) `Uint8ClampedArray`
+2. Which Typed Array is specifically optimized for image pixel data?\
+   A) `Uint16Array`\
+   B) `Float32Array`\
+   C) `Uint8ClampedArray`\
    D) `Int32Array`
 
-3. What happens when you assign `300` to an index in `new Uint8Array(1)`?
-   A) Throws `RangeError`
-   B) Stores `300` exactly
-   C) Stores `44` (wraps via modulo 256)
+3. What happens when you assign `300` to an index in `new Uint8Array(1)`?\
+   A) Throws `RangeError`\
+   B) Stores `300` exactly\
+   C) Stores `44` (wraps via modulo 256)\
    D) Stores `255` (clamped)
 
-4. Which method is NOT available on Typed Arrays?
-   A) `.map()`
-   B) `.splice()`
-   C) `.find()`
+4. Which method is NOT available on Typed Arrays?\
+   A) `.map()`\
+   B) `.splice()`\
+   C) `.find()`\
    D) `.reduce()`
 
-5. What is the key difference between `.subarray()` and `.slice()` on a Typed Array?
-   A) `.subarray()` copies data; `.slice()` shares memory
-   B) `.subarray()` returns a zero-copy view; `.slice()` returns a full copy
-   C) `.subarray()` works only on `ArrayBuffer`; `.slice()` works on views
+5. What is the key difference between `.subarray()` and `.slice()` on a Typed Array?\
+   A) `.subarray()` copies data; `.slice()` shares memory\
+   B) `.subarray()` returns a zero-copy view; `.slice()` returns a full copy\
+   C) `.subarray()` works only on `ArrayBuffer`; `.slice()` works on views\
    D) There is no difference
 
-6. How does JavaScript handle system endianness for standard Typed Arrays?
-   A) Always forces big-endian
-   B) Always forces little-endian
-   C) Inherits the host platform's native endianness
+6. How does JavaScript handle system endianness for standard Typed  Arrays?\
+   A) Always forces big-endian\
+   B) Always forces little-endian\
+   C) Inherits the host platform's native endianness\
    D) Randomizes endianness per allocation
 
-7. Which parameter signature correctly creates a view over an existing buffer starting at byte 8?
-   A) `new Uint8Array(buffer, 8)`
-   B) `new Uint8Array(8, buffer)`
-   C) `new Uint8Array({ buffer: buffer, offset: 8 })`
+7. Which parameter signature correctly creates a view over an existing buffer starting at byte 8?\
+   A) `new Uint8Array(buffer, 8)`\
+   B) `new Uint8Array(8, buffer)`\
+   C) `new Uint8Array({ buffer: buffer, offset: 8 })`\
    D) `Uint8Array.view(buffer, 8)`
 
-8. What is the `.byteLength` of `new Uint32Array(4)`?
-   A) 4 bytes
-   B) 8 bytes
-   C) 16 bytes
+8. What is the `.byteLength` of `new Uint32Array(4)`?\
+   A) 4 bytes\
+   B) 8 bytes\
+   C) 16 bytes\
    D) 32 bytes
 
-9. Which operation correctly and efficiently converts a `Float64Array` to a standard `Array`?
-   A) `Array.prototype.push.apply([], fa)`
-   B) `fa.toArray()`
-   C) `Array.from(fa)`
+9. Which operation correctly and efficiently converts a `Float64Array` to a standard `Array`?\
+   A) `Array.prototype.push.apply([], fa)`\
+   B) `fa.toArray()`\
+   C) `Array.from(fa)`\
    D) `JSON.parse(JSON.stringify(fa))`
 
-10. What value results from assigning `NaN` to a `Uint8Array`?
-    A) `NaN`
-    B) `0`
-    C) `255`
+10. What value results from assigning `NaN` to a `Uint8Array`?\
+    A) `NaN`\
+    B) `0`\
+    C) `255`\
     D) `-1`
 
 ### Detail Questions

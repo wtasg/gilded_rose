@@ -121,64 +121,64 @@ Alternatives & Use Cases:
 
 ### MCQ
 
-1. Which structure is the foundational raw binary memory container in JavaScript?
-   A) `Buffer`
-   B) `ArrayBuffer`
-   C) `DataView`
+1. Which structure is the foundational raw binary memory container in JavaScript?\
+   A) `Buffer`\
+   B) `ArrayBuffer`\
+   C) `DataView`\
    D) `TypedArray`
 
-2. Which API provides explicit endianness control per read/write operation?
-   A) `Uint32Array`
-   B) `Buffer`
-   C) `DataView`
+2. Which API provides explicit endianness control per read/write operation?\
+   A) `Uint32Array`\
+   B) `Buffer`\
+   C) `DataView`\
    D) `ArrayBuffer`
 
-3. In modern Node.js, `Buffer` is technically a subclass of:
-   A) `Array`
-   B) `DataView`
-   C) `Uint8Array`
+3. In modern Node.js, `Buffer` is technically a subclass of:\
+   A) `Array`\
+   B) `DataView`\
+   C) `Uint8Array`\
    D) `SharedArrayBuffer`
 
-4. When parsing a TCP packet containing `uint8`, `int16`, and `float32` fields, which view is most appropriate?
-   A) `Uint8Array`
-   B) `DataView`
-   C) `Buffer`
+4. When parsing a TCP packet containing `uint8`, `int16`, and `float32` fields, which view is most appropriate?\
+   A) `Uint8Array`\
+   B) `DataView`\
+   C) `Buffer`\
    D) `Float32Array`
-
-5. Which structure natively supports `.map()`, `.filter()`, and `.reduce()`?
-   A) `ArrayBuffer`
-   B) `DataView`
-   C) `TypedArray`
+\
+5. Which structure natively supports `.map()`, `.filter()`, and `.\reduce()`?\
+   A) `ArrayBuffer`\
+   B) `DataView`\
+   C) `TypedArray`\
    D) `SharedArrayBuffer`
 
-6. What is the modern web-standard replacement for `Buffer.from(str, 'utf8')` in browsers?
-   A) `new TextEncoder().encode(str)`
-   B) `btoa(str)`
-   C) `String.prototype.toBinary()`
+6. What is the modern web-standard replacement for `Buffer.from(str, \'utf8')` in browsers?\
+   A) `new TextEncoder().encode(str)`\
+   B) `btoa(str)`\
+   C) `String.prototype.toBinary()`\
    D) `new DataView().setString(str)`
 
-7. Which API is required alongside `SharedArrayBuffer` to prevent race conditions?
-   A) `Atomics`
-   B) `Worker.postMessage`
-   C) `MessageChannel`
+7. Which API is required alongside `SharedArrayBuffer` to prevent race conditions?\
+   A) `Atomics`\
+   B) `Worker.postMessage`\
+   C) `MessageChannel`\
    D) `Blob`
 
-8. What happens to an `ArrayBuffer` when it's transferred to a Web Worker using `postMessage(buffer, [buffer])`?
-   A) It's deep-cloned
-   B) It's serialized to JSON
-   C) It becomes detached in the sender context
+8. What happens to an `ArrayBuffer` when it's transferred to a Web \Worker using `postMessage(buffer, [buffer])`?\
+   A) It's deep-cloned\
+   B) It's serialized to JSON\
+   C) It becomes detached in the sender context\
    D) It throws a `SecurityError`
-
-9. `DataView.getInt32(0, true)` reads a 32-bit integer using which byte order?
-   A) Big-endian
-   B) Little-endian
-   C) Host-native
+\
+9. `DataView.getInt32(0, true)` reads a 32-bit integer using which byte order?\
+   A) Big-endian\
+   B) Little-endian\
+   C) Host-native\
    D) Network byte order
 
-10. Which structure is best suited for WebGL vertex position data?
-    A) `DataView`
-    B) `Buffer`
-    C) `Float32Array`
+10. Which structure is best suited for WebGL vertex position data?\
+    A) `DataView`\
+    B) `Buffer`\
+    C) `Float32Array`\
     D) `Uint8Array`
 
 ### Detail Questions
