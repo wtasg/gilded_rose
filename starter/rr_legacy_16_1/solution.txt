@@ -1,0 +1,588 @@
+REMEDIATION PLAN — Product & User Dashboard
+===========================================
+Audience:  One developer working alone
+Goal:      Fix all security vulnerabilities, Redux misuse, component
+           anti-patterns, and performance problems identified in audit.txt
+Approach:  Four ordered phases. Each phase is independently shippable.
+           Later phases depend on earlier ones being done first.
+
+---
+
+PHASE 1 — SECURITY  (do this before anything else)
+====================================================
+These issues are live risks regardless of what else is broken.
+Estimated effort: 1–2 days.
+
+Step 1.1  Remove all credentials and secrets from source
+  Files: src/constants/appConstants.js, src/services/authService.js
+
+  - Delete ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_BYPASS_KEY, JWT_SECRET.
+  - Create a .env file (gitignored) for any values that must differ per
+    environment. Reference them as process.env.REACT_APP_* in JS.
+    Example .env:
+      REACT_APP_API_BASE_URL=http://localhost:4000/api
+  - In authService.js, remove the entire FAKE_USERS_DB plaintext password
+    object. In a real app this data lives on the server. For the demo,
+    replace with a minimal fixture that does not contain readable passwords.
+  - Delete the admin bypass block in authService.js login():
+      // remove this entire if-block:
+      if (bypassKey === ADMIN_BYPASS_KEY) { ... }
+  - Add .env to .gitignore if not already there.
+
+Step 1.2  Remove generateFakeJwt and JWT_SECRET from the frontend
+  Files: src/utils/helpers.js, src/constants/appConstants.js
+
+  - Delete generateFakeJwt() from helpers.js.
+  - Delete JWT_SECRET and JWT_EXPIRY from appConstants.js.
+  - In authService.js, replace the JWT generation with a simple random
+    opaque token string (e.g., a random hex string) since this is a demo
+    with no real server. Token generation must move server-side when a real
+    backend is introduced.
+
+Step 1.3  Fix XSS in ProductCard
+  File: src/components/Products/ProductCard.js
+
+  Replace:
+    <div
+      style={styles.description}
+      dangerouslySetInnerHTML={{ __html: product.description }}
+    />
+  With:
+    <div style={styles.description}>{product.description}</div>
+
+  If rich HTML descriptions are a product requirement, install DOMPurify:
+    npm install dompurify
+  Then:
+    import DOMPurify from 'dompurify';
+    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }} />
+
+  Also remove the <script> tag from the one product in mockData.js that
+  contains it — it was a demonstration artifact, not needed any more.
+
+Step 1.4  Remove all console.log statements that include tokens, passwords,
+          or user PII
+  Files to sweep:
+    src/utils/helpers.js                  (getAuthHeader logs token)
+    src/services/authService.js           (logs token, user object, password attempt)
+    src/actions/authActions.js            (logs email + password in login thunk)
+    src/components/Layout/UserAvatar.js   (logs token.substring in render)
+    src/components/Users/UserRow.js       (logs token in handleRoleChange)
+    src/containers/DashboardContainer.js  (logs auth state + token in UNSAFE_componentWillMount)
+    src/reducers/authReducer.js           (logs on every action)
+    src/store/configureStore.js           (logger logs full state including token)
+
+  Quick approach — grep for console.log across the whole src/ directory:
+    grep -rn "console\.log" src/
+  Remove any line that mentions: token, password, auth, user (when it
+  includes the user object), or state dumps that include the auth slice.
+
+  For general debugging console.logs (not security-sensitive), wrap them so
+  they only run in development:
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(...);
+    }
+  Then remove them anyway — they add noise.
+
+Step 1.5  Enforce token expiry on session restore
+  File: src/index.js
+
+  After reading the token from localStorage, decode the payload and check
+  the exp claim before trusting it:
+
+    function isTokenExpired(token) {
+      try {
+        var payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp && Date.now() / 1000 > payload.exp;
+      } catch (e) {
+        return true; // malformed — treat as expired
+      }
+    }
+
+    if (token && isTokenExpired(token)) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('current_user');
+      token = null;
+    }
+
+Step 1.6  Fix forgotPassword email enumeration
+  File: src/services/authService.js
+
+  Change the function to always return the same message regardless of
+  whether the email is in the DB:
+    return Promise.resolve({
+      message: 'If an account exists for that email you will receive reset instructions.'
+    });
+
+
+---
+
+PHASE 2 — REDUX CORRECTNESS
+=============================
+These bugs cause subtle data corruption and break Redux DevTools.
+Estimated effort: 2–3 days.
+
+Step 2.1  Replace all non-serializable values in state with serializable ones
+
+  (a) Dates — find every new Date() stored in an action payload or state:
+        src/actions/authActions.js     loginTime: new Date()
+        src/actions/productActions.js  fetchedAt from service (Date object)
+        src/actions/userActions.js     fetchedAt from service (Date object)
+        src/reducers/userReducer.js    stats.lastCalculated: new Date()
+      Replace with Date.now() (a number) or new Date().toISOString() (a string).
+
+  (b) Promise in product action:
+        src/actions/productActions.js  refreshPromise: new Promise(...)
+      Delete this field from the fetchProductsSuccess payload and remove
+      state._refreshPromise from the reducer.
+
+  (c) Functions in action payloads:
+        src/actions/productActions.js  onSaveCallback: function() {}
+        src/actions/userActions.js     onSaveCallback: function() {}
+      Delete onSaveCallback from both action creators and from the reducers
+      that store it in state (_onSaveCallback). Any save side-effects should
+      be chained inside the thunk with .then(), not stored in state.
+
+  (d) Date objects in mock service responses:
+        src/services/productService.js  fetchedAt: new Date()
+        src/utils/mockData.js           createdAt: new Date(), updatedAt: new Date()
+      Change to ISO strings throughout.
+
+  (e) _computedLabel function stored on product objects:
+        src/utils/mockData.js  _computedLabel: function() { ... }
+      Remove _computedLabel entirely. If a display label is needed, compute
+      it inline in the component or in a pure helper function, not stored
+      on the data object.
+
+Step 2.2  Fix all state mutations in reducers
+
+  Go through each case in every reducer and ensure no mutation occurs.
+  The fastest path is to install immer and wrap the reducer body:
+
+    npm install immer
+
+    import produce from 'immer';
+
+    var productReducer = produce(function(draft, action) {
+      switch (action.type) {
+        case types.CREATE_PRODUCT_SUCCESS:
+          draft.allProducts.push(action.payload.product); // mutation OK inside produce
+          break;
+        // ...
+      }
+    }, initialState);
+
+  Without immer, replace mutations manually:
+    // WRONG:
+    state.allProducts.push(product);
+    // RIGHT:
+    return Object.assign({}, state, {
+      allProducts: state.allProducts.concat([product])
+    });
+
+  Mutations to fix by file:
+    authReducer.js     — state.data.lastAttempt = new Date() before spread
+    productReducer.js  — state.lastFetched assignment, push() on allProducts,
+                         index assignment on allProducts, field assignment on
+                         editingProductDraft, push() on selectedProductIds,
+                         nested category array splices
+    userReducer.js     — state.lastFetched, push() on allUsers, index assignment
+                         on allUsers
+    uiReducer.js       — state.notifications.push()
+
+Step 2.3  Remove console.log and Math.random() from all reducers
+  Files: src/reducers/*.js
+
+  Delete every line matching:
+    console.log('[*Reducer]', ...)
+    var nonce = Math.random()
+  These have no legitimate purpose in a reducer.
+
+Step 2.4  Move rebuildCategoryIndex() and recalcStats() out of reducers
+  Files: src/reducers/productReducer.js, src/reducers/userReducer.js
+
+  - Delete rebuildCategoryIndex() from productReducer.js. The reducer stores
+    allProducts; category breakdown can be derived at read time.
+  - Delete recalcStats() from userReducer.js.
+  - Create a selectors file: src/selectors/index.js
+    Use plain functions (or reselect for memoization once other things are
+    stable) to compute derived data:
+
+      // src/selectors/index.js
+      function selectCategoryBreakdown(state) {
+        var products = state.data.products.allProducts;
+        return products.reduce(function(acc, p) {
+          acc[p.category] = (acc[p.category] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      function selectUserStats(state) {
+        var users = state.data.users.allUsers;
+        return {
+          total:     users.length,
+          active:    users.filter(function(u) { return u.status === 'active'; }).length,
+          adminCount: users.filter(function(u) { return u.role === 'admin'; }).length
+        };
+      }
+
+  - Update mapStateToProps in connected components to call these selectors
+    instead of reading pre-computed values from state.
+
+Step 2.5  Disable Redux logger and DevTools in production
+  File: src/store/configureStore.js
+
+  if (process.env.NODE_ENV !== 'production') {
+    middleware.push(logger);
+  }
+
+  var composeEnhancers =
+    process.env.NODE_ENV !== 'production' &&
+    typeof window !== 'undefined' &&
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+      ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ trace: true, traceLimit: 25 })
+      : compose;
+
+Step 2.6  Fix getState() usage inside fetchProducts action creator
+  File: src/actions/productActions.js
+
+  Remove the getState() call and pass filters explicitly from the call site:
+    // in component:
+    this.props.fetchProducts(this.props.filters);
+    // in action creator:
+    function fetchProducts(filters) {
+      return function(dispatch) {
+        dispatch(fetchProductsRequest());
+        return productService.fetchProducts(filters || {}) ...
+      };
+    }
+
+
+---
+
+PHASE 3 — COMPONENT ANTI-PATTERNS
+===================================
+These reduce reliability and will block migration to React 18.
+Estimated effort: 3–4 days.
+
+Step 3.1  Fix the stale closure in SessionTimer  [quickest win]
+  File: src/components/Layout/SessionTimer.js
+
+  Change:
+    setInterval(() => {
+      setElapsed(elapsed + 1);
+      setTickCount(tickCount + 1);
+      console.log('tick, elapsed:', elapsed);
+    }, 1000);
+  To:
+    setInterval(() => {
+      setElapsed(prev => prev + 1);
+      setTickCount(prev => prev + 1);
+    }, 1000);
+
+  Also return a cleanup function from useEffect to prevent memory leaks:
+    useEffect(() => {
+      var id = setInterval(() => {
+        setElapsed(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(id);
+    }, []);
+
+Step 3.2  Replace UNSAFE_componentWillMount with componentDidMount
+  Every UNSAFE_componentWillMount can simply be renamed componentDidMount.
+  Check each file to confirm no SSR (server-side rendering) is involved —
+  there isn't in this app, so the rename is safe.
+  Files: LoginForm.js, App.js, Header.js, DashboardContainer.js,
+         ProductsContainer.js (UsersPage, ProductsPage stubs)
+
+Step 3.3  Eliminate componentWillReceiveProps and derived state
+
+  This is the largest single refactor. For each component:
+
+  (a) If local state is simply a copy of a Redux value, remove the local
+      state and read from props directly:
+        // instead of this.state.localSearchTerm, use this.props.filters.searchTerm
+
+  (b) If local state is computed from props (e.g., isAdmin derived from user.role),
+      compute it in render() or as a class method:
+        get isAdmin() {
+          return this.props.user &&
+            (this.props.user.role === 'admin' || this.props.user.role === 'superadmin');
+        }
+
+  (c) For edit forms (ProductEditForm, UserForm) where local state is a valid
+      editing buffer, initialize from props in the constructor only. When the
+      user opens a different item to edit, the parent should unmount and remount
+      the form (key={editingProduct.id}) rather than the form trying to sync
+      itself. This is far simpler than componentWillReceiveProps:
+        // in ProductDashboard render:
+        {this.props.editingProduct && (
+          <ProductEditForm
+            key={this.props.editingProduct.id}  // <-- add this
+            product={this.props.editingProduct}
+            ...
+          />
+        )}
+
+  (d) Remove all componentWillReceiveProps methods once the above is done.
+
+  Files to update:
+    LoginForm.js, UserMenu.js, Sidebar.js, ProductDashboard.js,
+    ProductFilter.js, ProductList.js, ProductEditForm.js,
+    UserDashboard.js, UserRow.js, UserForm.js
+
+Step 3.4  Fix componentDidUpdate → setState validation anti-pattern
+  Files: ProductEditForm.js, UserForm.js
+
+  Remove componentDidUpdate. Instead, run validation inside the change handler:
+
+    handleChange(field, e) {
+      var value = e.target.value;
+      var newFormState = Object.assign({}, this.state, { [field]: value, isDirty: true });
+      var errors = this.state.isDirty ? this.validate(newFormState) : {};
+      this.setState(Object.assign({}, newFormState, { errors: errors }));
+      if (this.props.onFieldChange) this.props.onFieldChange(field, value);
+    }
+
+Step 3.5  Break the prop-drilling chain with React Context
+  The token and current user are needed in deeply nested components.
+  Create a context for auth:
+
+    // src/context/AuthContext.js
+    import React from 'react';
+    var AuthContext = React.createContext(null);
+    export default AuthContext;
+
+  Provide it at the top level in DashboardContainer:
+    <AuthContext.Provider value={{ user: this.props.user, token: this.props.token, isAdmin: isAdmin }}>
+      <Layout ...>
+        {children}
+      </Layout>
+    </AuthContext.Provider>
+
+  In UserAvatar, UserRow, and any other leaf that needs auth values:
+    // Option A (class component): use AuthContext.Consumer
+    <AuthContext.Consumer>
+      {function(auth) { return <span>{auth.user.name}</span>; }}
+    </AuthContext.Consumer>
+
+    // Option B: connect() the leaf component directly to Redux
+    // (already have connect available, just add mapStateToProps)
+
+  Once context is in place, remove the token/user/isAdmin props from
+  Layout, Header, UserMenu, Sidebar, NavItem — they no longer need to
+  pass them down. This simplifies all five prop-drilling levels.
+
+Step 3.6  Consolidate filter state to a single source (Redux only)
+  Files: ProductDashboard.js, ProductFilter.js, UserDashboard.js
+
+  - Remove localSearchTerm, localCategory, localStatus from ProductDashboard.
+  - Remove searchTerm, category, status local state from ProductFilter.
+  - Make ProductFilter a controlled component: it receives the current values
+    as props and calls onChange callbacks. All state lives in Redux.
+  - Remove componentWillReceiveProps from both components (handled by 3.3).
+
+  After: The only place filter state exists is state.data.products.filters.
+  mapStateToProps reads it; dispatched actions update it.
+
+
+---
+
+PHASE 4 — PERFORMANCE & BUILD CLEANUP
+=======================================
+Do this last — the app should be correct before it is fast.
+Estimated effort: 2–3 days.
+
+Step 4.1  Add pagination (remove DEFAULT_PAGE_SIZE = 9999)
+  File: src/constants/appConstants.js, src/services/productService.js,
+        src/services/userService.js, src/components/Products/ProductList.js,
+        src/components/Users/UserTable.js
+
+  - Change DEFAULT_PAGE_SIZE to 50.
+  - Add page and pageSize parameters to fetchProducts / fetchUsers.
+  - Add pagination state to Redux (state.data.products.pagination).
+  - Add a pagination control component that dispatches page-change actions.
+  - ProductList renders only the current page's items.
+  - As an alternative or addition, add react-window for windowed rendering:
+      npm install react-window
+      Replace the products.map() inside ProductList with a FixedSizeGrid
+      or VariableSizeList from react-window.
+
+Step 4.2  Debounce search input
+  Files: src/components/Products/ProductFilter.js,
+         src/components/Users/UserDashboard.js
+
+  Either install lodash.debounce:
+    npm install lodash.debounce
+    import debounce from 'lodash.debounce';
+    this.debouncedSearch = debounce(this.props.onSearchChange, 300);
+    // then call this.debouncedSearch(term) in handleSearch
+
+  Or write a minimal debounce:
+    constructor(props) {
+      super(props);
+      var self = this;
+      this._searchTimeout = null;
+      this.handleSearch = function(e) {
+        var term = e.target.value;
+        self.setState({ searchTerm: term });
+        clearTimeout(self._searchTimeout);
+        self._searchTimeout = setTimeout(function() {
+          self.props.onSearchChange(term);
+        }, 300);
+      };
+    }
+
+Step 4.3  Memoize derived data with reselect
+  npm install reselect
+
+  Move all the inline computations that currently run in render() or
+  mapStateToProps to reselect selectors. Examples:
+
+    import { createSelector } from 'reselect';
+
+    var selectAllProducts = function(state) {
+      return state.data.products.allProducts;
+    };
+    var selectFilters = function(state) {
+      return state.data.products.filters;
+    };
+    var selectFilteredProducts = createSelector(
+      [selectAllProducts, selectFilters],
+      function(products, filters) {
+        // runs only when allProducts or filters reference changes
+        return applyFilters(products, filters);
+      }
+    );
+
+  Replace the inline filter/sort code in:
+    ProductDashboard.js — filteredProducts, categoryBreakdown
+    DashboardContainer.js — recentProducts, recentUsers, categoryBreakdown
+    UserDashboard.js — filteredUsers, departments, uniqueRoles
+    UserTable.js — the sorted array inside render()
+
+Step 4.4  Remove per-render computations from leaf components
+  Files: ProductCard.js, UserRow.js
+
+  Move avatar color and initials to a pure helper function or a class
+  getter so the logic is easy to extract later:
+
+    // helpers.js
+    function getInitials(name) {
+      return (name || '').split(' ').slice(0, 2)
+        .map(function(w) { return w[0] || ''; }).join('').toUpperCase();
+    }
+    function getAvatarHue(seed) {
+      return (seed || '').split('').reduce(function(h, c) {
+        return (h + c.charCodeAt(0)) % 360;
+      }, 0);
+    }
+
+  In React 16 class components, wrap ProductCard in React.memo if it is
+  converted to a functional component, or implement a correct
+  shouldComponentUpdate. The current shouldComponentUpdate in ProductCard
+  is incorrect — it silently blocks renders when product content changes
+  without changing the reference (common with the in-memory mock store).
+  Remove the shouldComponentUpdate and rely on pure Redux connect()
+  optimisations instead.
+
+Step 4.5  Fix source maps in production build
+  File: webpack.config.js
+
+  Replace:
+    devtool: 'source-map',
+  With:
+    devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
+
+  Or keep a source map for production error monitoring but use a hidden one
+  that is not served to browsers:
+    devtool: process.env.NODE_ENV === 'production' ? 'hidden-source-map' : 'eval-source-map',
+
+Step 4.6  Sync routes/index.js with App.js
+  Currently routes/index.js defines a route config that App.js does not use —
+  App.js has routes inline and they can silently diverge.
+
+  Either:
+  (a) Delete routes/index.js and add a comment in App.js noting that routes
+      are defined here intentionally (simplest).
+  (b) Make App.js consume routes/index.js:
+      import routes from './routes';
+      // then in render():
+      <Switch>
+        {routes.filter(r => !r.private).map(r => (
+          <Route key={r.path} exact={r.exact} path={r.path} component={r.component} />
+        ))}
+        {routes.filter(r => r.private).map(r => (
+          <PrivateRoute key={r.path} exact={r.exact} path={r.path} component={r.component} />
+        ))}
+      </Switch>
+
+Step 4.7  Remove hardcoded duplicate constant lists
+  HARDCODED_CATEGORIES is defined in ProductEditForm.js.
+  HARDCODED_ROLES and HARDCODED_DEPTS are defined in UserForm.js.
+  These duplicate values already present in appConstants.js and in the
+  Redux store (state.data.products.categories, state.data.users.roles).
+
+  - Export PRODUCT_CATEGORIES from appConstants.js (already there as an object).
+  - Export ROLES and DEPARTMENTS arrays from appConstants.js.
+  - Import them in ProductEditForm, UserForm, and anywhere else they are
+    defined inline. Delete the local duplicate definitions.
+
+
+---
+
+SUGGESTED EXECUTION ORDER (for one developer)
+===============================================
+
+Week 1 — Phase 1 (security). This is the highest-priority work.
+  Days 1–2: Steps 1.1, 1.2, 1.3 (credentials, JWT, XSS)
+  Day 3:    Steps 1.4, 1.5, 1.6 (logging, token expiry, enumeration)
+  Checkpoint: run the app and confirm login, product list, and user list
+              all still work. No tokens visible in console.
+
+Week 2 — Phase 2 (Redux). Enables reliable devtools and prevents hidden bugs.
+  Day 1: Step 2.1 (non-serializable state — Dates, Promises, Functions)
+  Day 2: Step 2.2 (mutations — recommend installing immer first)
+  Day 3: Steps 2.3, 2.4 (console.log in reducers, move heavy computation)
+  Day 4: Steps 2.5, 2.6 (logger/devtools in prod, getState coupling)
+  Checkpoint: open Redux DevTools; verify time-travel works without errors;
+              verify no warnings about non-serializable values.
+
+Week 3 — Phase 3 (components). Fixes correctness bugs and prepares for React 18.
+  Day 1: Steps 3.1, 3.2 (SessionTimer, UNSAFE lifecycle renames)
+  Day 2: Step 3.3 part 1 — remove componentWillReceiveProps from simpler
+          components: LoginForm, UserMenu, Sidebar, ProductList, UserRow
+  Day 3: Step 3.3 part 2 — remove from forms using key= trick: ProductEditForm, UserForm
+  Day 4: Steps 3.4, 3.5 (componentDidUpdate setState, introduce AuthContext)
+  Day 5: Step 3.6 (consolidate filter state)
+  Checkpoint: verify SessionTimer counts up; verify edit forms work correctly
+              when switching between items; verify no React warnings in console.
+
+Week 4 — Phase 4 (performance and build cleanup).
+  Day 1: Step 4.5 (source maps) + Step 4.6 (routes sync) + Step 4.7 (constants)
+  Day 2: Steps 4.1, 4.2 (pagination + debounce)
+  Day 3: Step 4.3 (reselect for memoized selectors)
+  Day 4: Step 4.4 (avatar/initials in leaf components, fix shouldComponentUpdate)
+  Checkpoint: load the products page; open DevTools Performance tab; record
+              a 5-second trace while scrolling — paint time should be under
+              100ms per frame (compare before/after pagination).
+
+
+---
+
+NOTES
+=====
+
+- The mock service layer (authService, productService, userService) mutates
+  in-memory arrays directly. This is fine for a demo but must be replaced with
+  real HTTP calls before production. The service interfaces are already
+  Promise-based, so the swap should be mechanical.
+
+- There is no test suite. After Phase 2, write unit tests for the reducers
+  (they should be pure functions at that point and easy to test). After
+  Phase 3, write component tests with @testing-library/react.
+
+- React 16 → React 18 migration is out of scope for this plan but completing
+  Phases 3 and the removal of all UNSAFE_ lifecycles is a prerequisite for it.
+  Once Phase 3 is done, upgrading should be a matter of:
+    npm install react@18 react-dom@18
+    // change ReactDOM.render() to createRoot() in src/index.js

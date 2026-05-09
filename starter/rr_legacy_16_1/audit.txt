@@ -1,0 +1,360 @@
+CODEBASE AUDIT — Product & User Dashboard
+==========================================
+Auditor: [not between us anymore; not dead but dead to us; due to AI, had to fire him]
+Date started: 2026-05-09
+Last updated: 2026-05-09
+
+NOTE: This audit was finished by an employee who is very much not gruntled anymore with us. 
+The security and Redux sections below are reasonably complete. 
+The component anti-patterns section is partial - only the most obvious issues were logged before Tim ran out.
+Performance and build config sections are stubs.
+
+---
+
+SECTION 1: SECURITY ISSUES
+---------------------------
+
+SEV-01  CRITICAL  Plaintext credentials in source code
+File: src/constants/appConstants.js (lines ~17-21)
+      src/services/authService.js (FAKE_USERS_DB object)
+
+  ADMIN_EMAIL     = 'admin@company.com'
+  ADMIN_PASSWORD  = 'Admin1234!'
+  ADMIN_BYPASS_KEY = 'INTERNAL_ADMIN_2022'
+
+  And inside authService.js, FAKE_USERS_DB stores every user's password as a
+  plain string. These values are compiled into the bundle and are visible to
+  anyone who opens DevTools.
+
+  Potential fix: Remove hardcoded credentials entirely. Use environment
+  variables (process.env.*) for any config that differs between environments.
+  In a real app, the user DB would live server-side and passwords would be
+  hashed (bcrypt / argon2). For this demo context, at minimum move them to a
+  .env file excluded from source control.
+
+SEV-02  CRITICAL  JWT secret shipped in frontend bundle
+File: src/constants/appConstants.js
+
+  JWT_SECRET = 'super_secret_jwt_key_do_not_share'
+
+  A JWT secret is server-only. Shipping it in a browser bundle means any
+  user can forge tokens and bypass auth. The function generateFakeJwt() in
+  helpers.js uses this secret.
+
+  Potential fix: JWT signing must happen server-side only. Remove JWT_SECRET
+  and generateFakeJwt() from the frontend entirely. The client should only
+  receive and store the opaque token; it should never sign one.
+
+SEV-03  CRITICAL  Admin bypass backdoor with no access control
+File: src/services/authService.js (login function)
+
+  if (bypassKey === ADMIN_BYPASS_KEY) {
+      console.log('Admin bypass used!');
+      console.log('Bypass login token:', token);
+      // grants full admin without checking email/password
+  }
+
+  The bypass key is a compile-time constant visible in the bundle. It logs
+  the granted token to the console. Any visitor who reads the source can
+  gain admin access.
+
+  Potential fix: Remove bypass entirely. If a break-glass mechanism is
+  genuinely needed, implement it server-side with an audit log, time-limited
+  tokens, and IP allowlisting.
+
+SEV-04  HIGH  XSS via dangerouslySetInnerHTML
+File: src/components/Products/ProductCard.js
+
+  <div dangerouslySetInnerHTML={{ __html: product.description }} />
+
+  One product in mockData.js deliberately has a <script> tag in its
+  description field to demonstrate the vulnerability. Any HTML stored in
+  the description column renders and executes in the browser.
+
+  Potential fix: Never use dangerouslySetInnerHTML with untrusted content.
+  Options in order of preference:
+    (a) Render as plain text: <div>{product.description}</div>
+    (b) If rich text is required, sanitize with DOMPurify before rendering:
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+
+SEV-05  HIGH  Auth token logged to console in multiple places
+Files: src/utils/helpers.js (getAuthHeader)
+       src/services/authService.js (login, bypass)
+       src/actions/authActions.js (login thunk)
+       src/components/Layout/UserAvatar.js (render)
+       src/components/Users/UserRow.js (handleRoleChange)
+       src/containers/DashboardContainer.js (UNSAFE_componentWillMount)
+
+  Tokens are written to console.log on every request, every login, every
+  render of UserAvatar, and every role-change click. The browser console is
+  readable by any JS running on the page (e.g., via XSS) and is sometimes
+  captured by monitoring tools.
+
+  Potential fix: Remove all console.log statements that include tokens,
+  passwords, or user PII. Use a logging utility that can be globally disabled
+  in production (e.g., a wrapper that checks process.env.NODE_ENV).
+
+SEV-06  MEDIUM  Auth stored in localStorage, no expiry enforced
+File: src/index.js, src/constants/appConstants.js
+
+  JWT_EXPIRY = '24h'  // comment says "not actually enforced - TODO"
+
+  Tokens are read from localStorage on every page load with no expiry check.
+  localStorage is accessible to any script on the page. SessionStorage would
+  at least limit exposure to the tab lifetime. Proper expiry validation is
+  missing.
+
+  Potential fix: Check token expiry on restore. Consider httpOnly cookies
+  (not accessible to JS at all) for token storage when a real backend exists.
+  In the interim, validate the exp claim from the JWT payload and clear storage
+  if it has passed.
+
+SEV-07  MEDIUM  forgotPassword() leaks whether email exists
+File: src/services/authService.js
+
+  The function returns a different response for known vs unknown emails,
+  enabling email enumeration by an attacker.
+
+  Potential fix: Return the same response regardless of whether the email is
+  found ("If an account exists for that email, you will receive instructions.").
+
+SEV-08  LOW  Frontend-only authorization checks
+Files: src/App.js (PrivateRoute), src/utils/helpers.js (isAdmin, hasRole),
+       multiple components (inline isAdmin checks)
+
+  Role and auth checks happen exclusively in the browser. A user who modifies
+  their Redux state or localStorage token can bypass them. In a real app every
+  privileged action must be validated on the server.
+
+  Potential fix: Treat all frontend auth checks as UX conveniences only.
+  Every API call that requires a role must be re-validated by the backend.
+
+
+---
+
+SECTION 2: REDUX MISUSE
+-----------------------
+
+RED-01  HIGH  Non-serializable values stored in Redux state
+
+  Multiple places store objects that cannot be serialized to JSON:
+
+  (a) Date objects
+      - authReducer: state.data.loginTime = action.payload.loginTime (new Date())
+      - productReducer: state.lastFetched = action.payload.fetchedAt (new Date())
+      - userReducer: stats.lastCalculated = new Date()
+      These break time-travel debugging, state persistence, and SSR hydration.
+      Fix: store timestamps as ISO strings or Unix epoch numbers.
+
+  (b) Promise stored in product state
+      productActions.js fetchProductsSuccess puts
+        refreshPromise: new Promise(function(r) { setTimeout(r, 5000); })
+      into the action payload. productReducer stores it as state._refreshPromise.
+      Fix: Remove. Side-effects belong in thunks or middleware, not state.
+
+  (c) Functions stored in state
+      setEditingProduct / setEditingUser store an onSaveCallback: function(){}
+      in the action payload; the reducers put it in state._onSaveCallback.
+      Fix: Remove. Callbacks should live in component handlers or be handled
+      via dispatch in thunks.
+
+RED-02  HIGH  Direct state mutation in reducers
+File: src/reducers/productReducer.js, userReducer.js, authReducer.js, uiReducer.js
+
+  Examples found:
+    state.data.lastAttempt = new Date()   // authReducer, before spread
+    state.lastFetched = action.payload.fetchedAt  // productReducer
+    state.allProducts.push(created)       // productReducer CREATE_SUCCESS
+    state.allProducts[idx] = updated      // productReducer UPDATE_SUCCESS
+    state.editingProductDraft[field] = value  // productReducer field update
+    state.selectedProductIds.push()       // productReducer BULK_SELECT
+    state.notifications.push(action.payload)  // uiReducer
+
+  Redux reducers must be pure functions returning new state. Mutation
+  corrupts the previous state reference and silently breaks undo/redo,
+  memoized selectors, and React's change-detection.
+
+  Fix: Return new objects/arrays at every level of change. Consider immer
+  (used by Redux Toolkit) to write mutation-style code that is actually
+  immutable under the hood.
+
+RED-03  MEDIUM  console.log + Math.random() called on every action in reducers
+Files: all four reducers
+
+  Every reducer starts with:
+    console.log('[xReducer]', action.type, 'at', Date.now());
+    var nonce = Math.random();   // in productReducer and userReducer
+
+  This produces thousands of log lines during normal use and adds a side-effect
+  (Math.random is impure) to every state transition. It also slows down the
+  Redux DevTools timeline.
+
+  Fix: Remove all console.log and nonce lines from reducers. If action
+  logging is needed, use the redux-logger middleware (already partially
+  present in configureStore.js) and disable it in production.
+
+RED-04  MEDIUM  Redux logger middleware logs entire state including tokens
+File: src/store/configureStore.js
+
+  The logger middleware calls:
+    console.log('prev state', store.getState());
+    console.log('next state', store.getState());
+
+  getState() returns the full tree including auth.data.token and user
+  passwords that may appear in form state.
+
+  Fix: Disable logger in production (check process.env.NODE_ENV). In
+  development, use redux-logger with a collapsed option and a stateTransformer
+  that redacts sensitive keys.
+
+RED-05  MEDIUM  Expensive rebuildCategoryIndex() called inside reducer
+File: src/reducers/productReducer.js
+
+  rebuildCategoryIndex() is invoked on every product-related action. It
+  iterates all products and logs to console. Reducers must be fast and
+  side-effect-free.
+
+  Fix: Move category index derivation to a memoized selector (reselect) that
+  runs only when allProducts changes.
+
+RED-06  LOW  recalcStats() called inside userReducer creating Date objects
+File: src/reducers/userReducer.js
+
+  Same problem as above — heavy computation with side effects (new Date())
+  inside a reducer.
+
+  Fix: Move to a selector.
+
+RED-07  LOW  State reads inside action creators (getState coupling)
+File: src/actions/productActions.js (fetchProducts thunk)
+
+  The thunk reads getState().data.products.filters to merge filters. This
+  couples the action to the exact state shape and makes the action harder
+  to test.
+
+  Fix: Pass filters as an explicit argument from the calling component, or
+  use a selector in the component and pass the result in.
+
+
+---
+
+SECTION 3: COMPONENT ANTI-PATTERNS  [INCOMPLETE — stopped here]
+-----------------------------------------------------------------
+
+COM-01  HIGH  Stale closure in SessionTimer
+File: src/components/Layout/SessionTimer.js
+
+  useEffect(() => {
+    setInterval(() => {
+      setElapsed(elapsed + 1);   // 'elapsed' is always 0 — captured at mount
+    }, 1000);
+  }, []);  // empty deps array
+
+  The interval captures elapsed=0 at mount time and never updates. The timer
+  display will always show "1s" because 0+1=1 on every tick.
+
+  Fix: Use the functional updater form:
+    setElapsed(prev => prev + 1);
+  Or add elapsed to the dependency array and clear/restart the interval on
+  each change (less efficient). The functional updater is the right solution.
+
+COM-02  HIGH  deprecated lifecycle methods throughout
+  UNSAFE_componentWillMount  — LoginForm, App, Header, DashboardContainer, UsersPage, ProductsPage
+  componentWillReceiveProps  — LoginForm, UserMenu, Sidebar, ProductDashboard,
+                               ProductFilter, ProductList, ProductEditForm,
+                               UserDashboard, UserRow, UserForm
+
+  These methods have been deprecated since React 16.3 and are removed in
+  React 18+. componentWillReceiveProps in particular is the source of most
+  "derived state from props" anti-patterns below.
+
+  Fix: Replace UNSAFE_componentWillMount with componentDidMount.
+  Replace componentWillReceiveProps with getDerivedStateFromProps (sparingly)
+  or — better — remove derived local state entirely and read from props/Redux
+  directly in render. See COM-03.
+
+COM-03  MEDIUM  Derived state from props anti-pattern (widespread)
+  Components that copy props into local state and then sync them back in
+  componentWillReceiveProps:
+    LoginForm, UserMenu, Sidebar, ProductDashboard, ProductFilter,
+    ProductList, ProductEditForm, UserDashboard, UserRow, UserForm
+
+  This creates two sources of truth that can diverge. The syncing code in
+  componentWillReceiveProps is error-prone and runs on every re-render.
+
+  Fix: Either
+    (a) Remove the local state and read the value directly from props/Redux,
+    or
+    (b) Use a controlled component pattern where the parent owns the value.
+  In cases like form state (ProductEditForm, UserForm) local state is fine but
+  it should be initialized once in the constructor and NOT re-synced from
+  props — the form is its own independent editing session.
+
+COM-04  MEDIUM  componentDidUpdate calling setState (extra render per keystroke)
+Files: ProductEditForm.js, UserForm.js
+
+  componentDidUpdate detects that a field changed and calls
+  this.setState({ errors: validate(state) }) — this triggers a second render
+  on every single keystroke.
+
+  Fix: Run validation inline in the change handler:
+    handleChange(field, e) {
+      var newState = { ...this.state, [field]: e.target.value };
+      this.setState({ ...newState, errors: validate(newState) });
+    }
+
+COM-05  MEDIUM  Five-level prop drilling of token, user, isAdmin
+  DashboardContainer passes token to Layout → Header → UserMenu → UserAvatar.
+  UserAvatar only logs the token substring — it does not need it.
+  UserRow receives token (passed via UserTable from UserDashboard) and logs
+  it on every role change.
+
+  Fix: Use React Context (or connect() directly in leaf components) for
+  cross-cutting values like the current user and auth token. At minimum, stop
+  passing token to presentational components that do not use it for rendering.
+
+COM-06  LOW  Filter state in three places simultaneously
+  The product search/filter state lives in:
+    1. Redux state (state.data.products.filters)
+    2. ProductDashboard local state (localSearchTerm, localCategory, etc.)
+    3. ProductFilter local state (searchTerm, category, status)
+  All three are kept in sync via componentWillReceiveProps cascades.
+
+  [NOTE: haven't fully traced all the edge cases here — needs more investigation]
+
+  Potential fix (partial): Make Redux the single source of truth and pass
+  values as controlled props to ProductFilter. Remove local copies in both
+  Dashboard and Filter.
+
+-- audit stopped here; performance section and build section not yet written --
+
+
+SECTION 4: PERFORMANCE  [STUB — not yet audited]
+-------------------------------------------------
+
+Known issues to investigate:
+- ProductList renders 5 000+ cards with no windowing (react-window / react-virtual)
+- No pagination (DEFAULT_PAGE_SIZE = 9999)
+- No debouncing on search input (setProductSearch dispatched on every keystroke)
+- sort() and filter() run in render() in ProductDashboard, UserDashboard, UserTable
+  without useMemo / reselect — recalculated on every Redux state change
+- Object.keys(categories) and Object.values() called inside render repeatedly
+- Avatar color and initials computed inside render in UserRow and ProductCard
+  (could be pure derived values or memoized)
+
+[TODO: benchmark, add specific line references]
+
+
+SECTION 5: BUILD / CONFIG  [STUB — not yet audited]
+----------------------------------------------------
+
+Known issues to check:
+- devtool: 'source-map' in webpack.config.js — no conditional for production;
+  source maps expose original source to end users
+- Redux DevTools enabled unconditionally (window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__)
+  — should be disabled in production builds
+- No environment-based config (no .env.production vs .env.development split)
+- routes/index.js defines a route config array that App.js does not use —
+  routes are duplicated inline, the two can silently drift apart
+
+[TODO: review webpack.config.js more carefully]

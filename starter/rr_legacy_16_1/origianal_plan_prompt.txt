@@ -1,0 +1,394 @@
+Create a top level directory "starter/" which will contain the starter apps. Then create a first react+redux starter app named "rr_legacy_16_1" which will be built as follows:
+
+Role
+====
+You are a senior legacy frontend engineer and technical debt simulator. Your task is to generate a complete, intentionally flawed, outdated, unoptimized, insecure, and difficult-to-maintain React 16 + legacy Redux application. The output should resemble a real enterprise codebase that accumulated years of rushed development, poor architectural decisions, inconsistent conventions, and anti-patterns.
+
+Objective
+=========
+Generate a fully working "Product & User Dashboard" application that serves as a refactoring and modernization challenge for developers learning:
+
+- React Hooks
+- React 18 migration
+- Redux Toolkit (RTK)
+- Feature-based architecture
+- State normalization
+- Memoization
+- Performance optimization
+- Secure frontend practices
+- Modern authentication handling
+- Safer rendering patterns
+
+The application should intentionally contain:
+- legacy React patterns,
+- outdated Redux architecture,
+- performance bottlenecks,
+- stale closure bugs,
+- bad state management,
+- code smells,
+- prop drilling,
+- insecure practices,
+- and realistic technical debt.
+
+The generated project must compile and run successfully despite the flaws.
+
+Core Technology Constraints
+===========================
+
+Mandatory versions:
+- React: 16.14.0
+- React DOM: 16.14.0
+- Redux: 4.x
+- React Redux: legacy connect() API
+- Redux Thunk middleware
+- React Router v5
+- No TypeScript
+- No Redux Toolkit
+- No Context API
+- No React Query
+- No Zustand
+- No Vite
+- No SWC
+- No ESM-only tooling
+- No functional architecture modernization
+
+Use:
+- createStore()
+- combineReducers()
+- applyMiddleware()
+- manual thunk setup
+- verbose action constants
+- CommonJS or legacy Babel/Webpack style setup
+
+Project Requirements
+====================
+
+The application should include:
+
+1. Authentication flow
+----------------------
+- Fake JWT login
+- Token stored directly in localStorage
+- No refresh tokens
+- No expiration handling
+- No secure cookie usage
+- Auth reducer with nested auth state
+- Fake protected routes
+
+2. Product Dashboard
+--------------------
+- Render 5,000+ products simultaneously
+- No pagination
+- No virtualization
+- Multiple nested product categories
+- Large nested objects in Redux state
+- Product editing forms
+- Product description rendering using dangerouslySetInnerHTML
+- Product filters and search implemented inefficiently
+
+3. User Dashboard
+-----------------
+- User tables
+- Deep component hierarchy
+- Excessive prop drilling
+- Large forms
+- Shared mutable state patterns
+- Class component lifecycle misuse
+
+4. Redux Store
+--------------
+- Organized by type:
+  /actions
+  /reducers
+  /constants
+  /containers
+  /components
+
+NOT feature-based organization.
+
+Required Anti-Patterns
+======================
+
+1. Legacy Redux Boilerplate
+---------------------------
+Generate:
+- giant switch reducers
+- verbose action constants
+- manual thunk creators
+- duplicated loading/error logic
+- deeply nested reducers
+- reducer files >300 lines
+- repetitive action types
+
+Examples:
+- FETCH_PRODUCTS_REQUEST
+- FETCH_PRODUCTS_SUCCESS
+- FETCH_PRODUCTS_FAILURE
+
+2. Deeply Nested State
+----------------------
+State shape should intentionally be difficult to manage.
+
+Example:
+state.data.products.categories.hardware.items.list.records
+
+Avoid:
+- normalization
+- entity maps
+- ids arrays
+- selectors abstraction
+
+3. Reducer Problems
+-------------------
+Include:
+- accidental state mutation
+- direct nested mutations
+- spread operator abuse
+- giant switch statements
+- side effects inside reducers
+
+Examples of forbidden reducer behavior that MUST be included:
+- console.log()
+- Math.random()
+- Date.now()
+
+4. connect() Everywhere
+-----------------------
+Use:
+- mapStateToProps
+- mapDispatchToProps
+- mergeProps
+- connect()
+
+Avoid:
+- hooks
+- useSelector
+- useDispatch
+
+Most components should be class components.
+
+5. Prop Drilling
+----------------
+Create component trees at least 5 levels deep where:
+- callbacks,
+- state setters,
+- auth data,
+- filters,
+- product data,
+- UI flags
+
+are passed manually through intermediate components unnecessarily.
+
+6. Unoptimized Rendering
+------------------------
+Include:
+- selectors created inline
+- selectors returning new arrays every render
+- filtering directly inside mapStateToProps
+- sorting inside render()
+- repeated Object.keys() / Object.values() calls
+- expensive calculations during render
+
+Do NOT use:
+- memoization
+- React.memo
+- PureComponent
+- reselect
+- useMemo
+- useCallback
+
+7. Massive DOM Rendering
+------------------------
+Render:
+- 5,000+ products
+- nested tables
+- multiple repeated rows
+- large forms
+
+using direct:
+products.map(...)
+
+with no optimization.
+
+8. Stale Closure Bugs
+---------------------
+Include at least one functional component with:
+- setInterval
+- useEffect
+- stale state references
+- incorrect dependency arrays
+
+The bug should be subtle and realistic.
+
+9. Derived State Anti-Patterns
+------------------------------
+Include:
+- derived state inside useEffect
+- unnecessary setState calls
+- duplicated derived state
+- syncing props to state incorrectly
+- componentDidUpdate misuse
+
+10. Non-Serializable Redux State
+--------------------------------
+Store invalid Redux values such as:
+- Promise objects
+- Date instances
+- class instances
+- functions
+
+inside:
+- action payloads
+- reducer state
+
+11. Security Vulnerabilities
+----------------------------
+Deliberately include:
+
+A. XSS
+------
+Render user-controlled HTML using:
+dangerouslySetInnerHTML
+
+without sanitization.
+
+B. Insecure Token Storage
+-------------------------
+Store JWT directly in localStorage.
+
+C. Unsafe Fake API Logic
+------------------------
+- hardcoded credentials
+- fake admin bypass
+- frontend-only auth checks
+
+D. Sensitive Debug Logging
+--------------------------
+Log tokens and user info to console.
+
+Code Style Requirements
+=======================
+
+The codebase should feel:
+- inconsistent,
+- rushed,
+- legacy,
+- partially copy-pasted,
+- and organically degraded over time.
+
+Intentionally include:
+- inconsistent naming conventions
+- duplicated logic
+- magic strings
+- inline styles
+- large components
+- commented-out code
+- TODO comments
+- FIXME comments
+- dead code
+- unused variables
+- nested ternaries
+- callback hell
+- lifecycle misuse
+
+Examples:
+- componentWillReceiveProps
+- UNSAFE_componentWillMount
+- componentDidMount fetching loops
+
+Avoid:
+- clean architecture
+- SOLID principles
+- DRY patterns
+- separation of concerns
+
+Desired File Structure
+======================
+
+Generate a realistic multi-file project:
+
+- package.json
+- webpack.config.js or CRA-compatible setup
+- src/index.js
+- src/store/configureStore.js
+- src/actions/*
+- src/reducers/*
+- src/constants/*
+- src/components/*
+- src/containers/*
+- src/services/*
+- src/utils/*
+- src/routes/*
+- src/App.js
+
+Generate enough files for the project to feel authentic.
+
+Data Requirements
+=================
+
+Generate:
+- mock APIs
+- fake large datasets
+- nested product categories
+- thousands of products
+- large user collections
+
+Use realistic enterprise-like data structures.
+
+Inline Breadcrumb Comments
+==========================
+
+Add subtle inline comments hinting at issues for students to eventually fix.
+
+Examples:
+- // TODO: optimize later
+- // quick workaround
+- // this avoids another API call somehow
+- // reducer mutation should be okay here
+- // localStorage is simpler than cookies
+- // rendering everything is easier for now
+
+Do NOT explicitly explain the fixes.
+
+Output Format
+=============
+
+Generate:
+1. Full package.json
+2. Complete Redux setup
+3. Reducers
+4. Actions
+5. Store configuration
+6. Major components
+7. Routing
+8. Mock APIs
+9. Example datasets
+10. Authentication flow
+11. Product dashboard
+12. User dashboard
+
+The project should:
+- run successfully,
+- appear realistic,
+- contain authentic technical debt,
+- and provide many refactoring opportunities.
+
+Important
+=========
+
+DO NOT modernize anything.
+DO NOT improve architecture.
+DO NOT silently fix anti-patterns.
+DO NOT optimize rendering.
+DO NOT sanitize dangerous HTML.
+DO NOT normalize Redux state.
+DO NOT replace class components with hooks.
+
+The purpose is to intentionally generate a difficult legacy codebase suitable for:
+- modernization exercises,
+- refactoring workshops,
+- performance profiling,
+- debugging practice,
+- Redux Toolkit migration,
+- React 18 migration,
+- and security auditing labs.
