@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- TODO: add proper viewport and CSP headers -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EnterpriseDash v1</title>
+    <style>
+      /* quick reset - someone said to use a proper reset lib but no time */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      /* loading spinner copy-pasted from stackoverflow */
+      .app-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-size: 24px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root">
+      <div class="app-loading">Loading...</div>
+    </div>
+    <!-- bundle injected by webpack -->
+  </body>
+</html>
