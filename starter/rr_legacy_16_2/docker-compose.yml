@@ -1,0 +1,61 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:12
+    ports:
+      - "28002:5432"
+    environment:
+      POSTGRES_DB: legacy_checkout
+      POSTGRES_USER: checkout
+      POSTGRES_PASSWORD: checkout
+    volumes:
+      - ./postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./postgres/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "wrong_user"]
+      interval: 4s
+      timeout: 2s
+      retries: 2
+
+  express-api:
+    build: ./backend
+    ports:
+      - "28001:28001"
+    environment:
+      PORT: 28001
+      DATABASE_URL: postgres://checkout:checkout@postgres:5432/legacy_checkout
+      CORS_ORIGIN: http://localhost:28000
+    depends_on:
+      - postgres
+    command: ["./startup.sh"]
+
+  checkout-cart-mf:
+    build: ./checkout-cart-mf
+    ports:
+      - "28011:8080"
+    environment:
+      API_URL: http://localhost:28001
+    depends_on:
+      - express-api
+
+  otp-auth-mf:
+    build: ./otp-auth-mf
+    ports:
+      - "28012:8080"
+    environment:
+      API_URL: http://localhost:28001
+    depends_on:
+      - express-api
+
+  checkout-shell:
+    build: ./shell
+    ports:
+      - "28000:8080"
+    environment:
+      CART_MF_URL: http://localhost:28011/remoteEntry.js
+      OTP_MF_URL: http://localhost:28012/remoteEntry.js
+    depends_on:
+      - checkout-cart-mf
+      - otp-auth-mf
+

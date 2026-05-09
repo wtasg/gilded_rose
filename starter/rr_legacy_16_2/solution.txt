@@ -1,0 +1,157 @@
+CHECKOUT MICRO-FRONTEND FULL AUDIT AND REMEDIATION PLAN
+=======================================================
+Goal: Convert the brittle training app into a safer, reliable checkout while
+keeping changes ordered and reviewable.
+
+Phase 1: Stop Security Exposure
+-------------------------------
+1. Remove sensitive browser globals and storage.
+   Files: shell/src/index.js, checkout-cart-mf/src/actions/cartActions.js,
+   otp-auth-mf/src/actions/otpActions.js, otp-auth-mf/src/reducers/otpReducer.js
+
+   - Delete `window.__USER__`, `window.cartData`, `window.currentOtpRequest`.
+   - Do not store JWT, OTP, or OTP session data in localStorage.
+   - Prefer httpOnly secure cookies for auth. If this remains a demo, keep the
+     token in memory only and expire it on refresh.
+
+2. Fix OTP.
+   Files: backend/server.js, otp-auth-mf/src/*
+
+   - Remove hardcoded bypass `999999`.
+   - Never return OTP values to the client.
+   - Store hashed OTP server-side with a short expiry.
+   - Allow only one active OTP session per phone or invalidate older sessions.
+   - Rate-limit send and verify endpoints.
+   - Enforce expiry consistently before accepting verification.
+
+3. Remove XSS sinks.
+   Files: checkout-cart-mf/src/components/CartApp.js, postgres/seed.sql
+
+   - Replace `dangerouslySetInnerHTML` with normal text rendering.
+   - If rich content is required, sanitize with DOMPurify on the frontend and
+     validate/clean stored content on the backend.
+   - Remove seeded XSS payloads from product and coupon records.
+
+4. Remove sensitive logging.
+   File: backend/server.js and frontend action files
+
+   - Stop logging request bodies, JWTs, OTPs, full auth objects, and Postgres
+     errors with raw parameters.
+   - Add structured logging with redaction.
+
+Phase 2: Enforce Backend Authority
+----------------------------------
+5. Recalculate checkout totals on the server.
+   Files: backend/server.js, postgres/schema.sql
+
+   - Accept only product IDs, quantities, shipping address, and coupon code.
+   - Load product prices and coupon rules from Postgres.
+   - Reject negative quantities and malformed payloads.
+   - Recalculate subtotal, discount, tax/shipping if applicable, and total.
+   - Store server-calculated totals only.
+
+6. Add authorization and ownership checks.
+   Files: backend/server.js, postgres/schema.sql
+
+   - Add real auth middleware.
+   - `GET /api/orders/:id` must verify the caller owns the order or has a
+     server-validated admin role.
+   - Protect `/api/admin/orders` on the backend, not the frontend.
+   - Add order ownership fields and indexes.
+
+7. Prevent duplicate orders.
+   Files: checkout-cart-mf/src/actions/cartActions.js, backend/server.js,
+   postgres/schema.sql
+
+   - Generate an idempotency key per checkout attempt.
+   - Add a unique constraint on idempotency key per user/session.
+   - Disable the place-order button while a request is pending.
+   - Return the existing order on duplicate submit.
+
+Phase 3: Fix State and Routing
+------------------------------
+8. Normalize Redux state.
+   Files: checkout-cart-mf/src/reducers/cartReducer.js,
+   otp-auth-mf/src/reducers/otpReducer.js
+
+   - Remove direct state mutation.
+   - Remove Date and Promise values from state.
+   - Store timestamps as numbers or ISO strings.
+   - Flatten cart state to products, items, coupon, address, orderStatus.
+   - Keep OTP state minimal: phone, sendStatus, verifyStatus, errors.
+
+9. Fix async dispatch ordering.
+   Files: checkout-cart-mf/src/actions/cartActions.js,
+   otp-auth-mf/src/actions/otpActions.js
+
+   - Track request IDs and ignore stale responses.
+   - Move calculation side effects out of reducers.
+   - Do not read stale totals before async coupon calls.
+   - Add explicit loading/error states.
+
+10. Fix direct URL access.
+    Files: shell/webpack.config.js, shell/src/index.js
+
+   - Enable SPA fallback for the shell.
+   - Stop relying on `location.state` for required page state.
+   - Load checkout/session/order state from backend by ID.
+   - Protect success and payment routes with backend-validated auth/session.
+
+Phase 4: Replace Microfrontend Hacks
+------------------------------------
+11. Replace script-tag remotes.
+    Files: shell/src/index.js, each microfrontend webpack config
+
+   - Use a defined remote contract or a supported federation/build strategy.
+   - Add loading, error, timeout, and retry states.
+   - Version remote APIs.
+   - Avoid each remote bundling conflicting React copies if they are mounted
+     on the same page.
+
+12. Centralize API client behavior.
+    Files: frontend action files
+
+   - Add one API wrapper for base URL, auth, JSON parsing, error handling, and
+     redaction.
+   - Stop returning inconsistent string booleans from the API.
+   - Treat non-2xx responses as errors.
+
+Phase 5: Database and Docker Cleanup
+------------------------------------
+13. Improve schema.
+    Files: postgres/schema.sql, postgres/seed.sql
+
+   - Replace text booleans with boolean columns.
+   - Add NOT NULL constraints for critical fields.
+   - Add foreign keys for users/orders/order_items.
+   - Split `items_json` and `address_json` into structured tables or JSONB
+     with validation.
+   - Add unique coupon code and idempotency constraints.
+
+14. Fix startup and healthchecks.
+    Files: docker-compose.yml, backend/startup.sh
+
+   - Remove sleep-based startup.
+   - Use a real Postgres healthcheck with the correct user/database.
+   - Make API startup retry DB connection explicitly.
+   - Add meaningful health endpoints for frontend bundles and API.
+
+15. Add tests.
+
+   - Backend: OTP expiry, duplicate order idempotency, order ownership, coupon
+     validation, server-side total calculation.
+   - Frontend: route refresh behavior, stale coupon responses, duplicate click
+     handling, OTP resend/verify flows.
+   - Integration: happy path, invalid coupon, negative quantity, unauthorized
+     order lookup, refresh on payment/success routes.
+
+Recommended Order
+-----------------
+1. Remove XSS, OTP leakage, token/OTP localStorage, sensitive logs.
+2. Move price/coupon/order authority to the backend.
+3. Add auth, ownership checks, and idempotency.
+4. Normalize Redux and fix async races.
+5. Fix routing and remote loading.
+6. Clean Docker/Postgres.
+7. Add regression tests around every fixed failure mode.
+

@@ -1,0 +1,468 @@
+Role
+====
+You are a senior legacy enterprise engineer tasked with generating a deliberately flawed, outdated, brittle, partially broken micro-frontend checkout application.
+
+Objective
+=========
+Generate a SMALL but REALISTIC legacy micro-frontend checkout cart system using:
+
+- React 16.14
+- Legacy Redux
+- Node.js
+- Express
+- PostgreSQL
+- Docker Compose
+
+The application should:
+- technically work,
+- successfully complete ONLY the ideal happy-path checkout flow,
+- but fail badly under edge cases, concurrency, refreshes, duplicate requests, navigation abuse, invalid state, timing issues, and direct URL access.
+
+The purpose is:
+- modernization practice,
+- debugging exercises,
+- security audits,
+- race-condition analysis,
+- Redux migration,
+- frontend hardening,
+- auth redesign,
+- microfrontend refactoring,
+- and resilience testing.
+
+Architecture
+============
+Generate a deliberately overengineered "microfrontend" setup for a tiny checkout cart application.
+
+Applications:
+1. checkout-shell
+2. checkout-cart-mf
+3. otp-auth-mf
+
+Backend:
+- express-api
+
+Database:
+- postgres
+
+Ports
+=====
+Frontend shell:
+- 28000
+
+Backend API:
+- 28001
+
+Postgres:
+- 28002
+
+Mandatory Docker Setup
+======================
+Generate:
+- Dockerfiles
+- docker-compose.yml
+- environment variables
+- startup scripts
+- broken healthchecks
+- bad dependency ordering
+
+The compose setup should:
+- occasionally fail on startup race conditions,
+- not properly wait for postgres readiness,
+- rely on sleep hacks,
+- and use brittle container networking assumptions.
+
+Examples:
+- depends_on without actual readiness
+- hardcoded hostnames
+- retry loops using setTimeout
+- startup.sh scripts with sleep 5
+
+Frontend Requirements
+=====================
+
+Technology Constraints
+----------------------
+Use:
+- React 16.14
+- Redux 4
+- redux-thunk
+- react-router-dom v5
+- class components
+- connect()
+- mapStateToProps
+- mapDispatchToProps
+
+Avoid:
+- Redux Toolkit
+- React Query
+- Context API
+- Hooks-first architecture
+- TypeScript
+- Suspense
+- React 18 APIs
+
+Mix:
+- class components
+- old functional components
+- badly written hooks components
+
+Microfrontend Anti-Patterns
+===========================
+
+The shell app should:
+- dynamically load remote bundles poorly,
+- assume globals exist,
+- crash if MF loads slowly,
+- fail silently on network errors,
+- share mutable window state,
+- expose auth data globally.
+
+Examples:
+- window.__USER__
+- window.cartData
+- window.currentOtpRequest
+
+Do NOT use proper federation tooling.
+Simulate old enterprise microfrontend hacks.
+
+Checkout Flow
+==============
+Implement:
+
+1. Product Cart
+---------------
+- Add/remove item
+- Quantity controls
+- Cart total calculation
+- Coupon application
+
+2. OTP Authentication
+---------------------
+- Phone input
+- Send OTP
+- Verify OTP
+- Fake JWT issuance
+
+3. Checkout Confirmation
+------------------------
+- Address form
+- Final submit
+- Order success page
+
+The happy path should work ONLY IF:
+- user clicks slowly,
+- requests occur in exact order,
+- refresh never happens,
+- tabs are not duplicated,
+- OTP is entered quickly,
+- coupon is valid,
+- network latency is ideal.
+
+Edge cases should fail badly.
+
+Required Failure Modes
+======================
+
+1. Race Conditions
+------------------
+Include:
+- duplicate OTP requests overwriting each other
+- multiple checkout clicks creating duplicate orders
+- stale cart totals
+- coupon recalculation timing issues
+- async Redux dispatch ordering bugs
+- outdated state reads
+
+Examples:
+- verify OTP before latest OTP response arrives
+- double-clicking "Place Order"
+- cart updates during checkout
+
+2. Direct URL Access Problems
+-----------------------------
+Routes should break if accessed directly.
+
+Examples:
+- /checkout/payment assumes prior route state
+- /checkout/success accessible without auth
+- refreshing nested routes breaks state
+- deep links produce blank pages
+
+Use:
+- location.state reliance
+- in-memory auth only
+- missing server fallback routing
+
+3. Resource Access Vulnerabilities
+----------------------------------
+Include:
+- order lookup by sequential numeric ID
+- missing authorization checks
+- frontend-only admin protection
+- cart retrieval without ownership validation
+- predictable OTP session IDs
+
+Examples:
+GET /api/orders/12
+
+returns another user's order.
+
+4. Broken State Management
+--------------------------
+Redux state should be:
+- deeply nested
+- duplicated
+- inconsistent
+- partially mutable
+
+Example:
+state.checkout.cart.current.active.items.list
+
+Include:
+- direct state mutation
+- reducers with side effects
+- non-serializable state
+- promises inside Redux
+- Date objects in state
+
+5. Coupon System Brittleness
+----------------------------
+Coupons should:
+- sometimes apply twice
+- fail under rapid clicks
+- allow negative totals
+- use floating-point math errors
+- trust frontend calculations
+
+Examples:
+- coupon stack race conditions
+- coupon removed after refresh
+- stale totals shown to user
+- backend trusting client subtotal
+
+6. OTP System Problems
+----------------------
+OTP system should include:
+- hardcoded OTP bypass
+- OTP stored in Redux
+- OTP stored in localStorage
+- no rate limiting
+- resend race conditions
+- expired OTP still accepted sometimes
+- multiple active OTP sessions
+
+Examples:
+OTP:
+123456
+
+admin bypass:
+999999
+
+7. Security Vulnerabilities
+---------------------------
+
+A. XSS
+------
+Render coupon messages or product names using:
+dangerouslySetInnerHTML
+
+without sanitization.
+
+B. Insecure Storage
+-------------------
+Store:
+- JWT
+- OTP session
+- cart state
+
+inside localStorage.
+
+C. Sensitive Logging
+--------------------
+Log:
+- JWT tokens
+- OTP values
+- request payloads
+- postgres errors
+
+to console.
+
+D. Trusting Frontend
+--------------------
+Backend should trust:
+- frontend prices
+- frontend totals
+- frontend coupon values
+
+E. Missing Validation
+---------------------
+Minimal validation:
+- negative quantities possible
+- malformed phone numbers accepted
+- invalid coupon formats crash app
+
+Code Quality Problems
+=====================
+
+Intentionally include:
+- giant components
+- mixed coding styles
+- inconsistent folder naming
+- dead code
+- commented-out code
+- TODO comments
+- duplicated reducers
+- callback hell
+- nested promises
+- stale closures
+- componentWillReceiveProps
+- UNSAFE lifecycle methods
+- random utility files
+- circular imports
+- magic strings
+- inline styles
+- inline anonymous functions everywhere
+
+Performance Problems
+====================
+
+Include:
+- unnecessary rerenders
+- selectors returning new arrays
+- filtering inside render()
+- expensive cart recalculation
+- multiple duplicate API requests
+- repeated polling intervals
+- no memoization
+
+Backend Requirements
+====================
+
+Node + Express
+---------------
+Use:
+- Express 4
+- callback-heavy middleware
+- badly layered architecture
+- routes/controllers/services mixed together
+
+Avoid:
+- validation libraries
+- proper auth middleware
+- service boundaries
+- DTOs
+- typed schemas
+
+Database
+--------
+Use PostgreSQL with:
+- weak schema design
+- no foreign key enforcement
+- nullable critical fields
+- inconsistent column naming
+- sequential IDs
+- coupon table without constraints
+
+Include:
+- seed.sql
+- fragile migrations
+- hardcoded seed users
+
+Example credentials:
+phone: 9999999999
+otp: 123456
+
+API Problems
+============
+Include:
+- inconsistent response formats
+- HTTP 200 for errors
+- string booleans
+- duplicated routes
+- hidden admin routes
+- timeout-prone endpoints
+- random latency simulation
+
+Examples:
+success: "true"
+
+instead of:
+success: true
+
+Project Structure
+=================
+
+Generate:
+- shell/
+- checkout-cart-mf/
+- otp-auth-mf/
+- backend/
+- postgres/
+- docker-compose.yml
+
+Each frontend app should have:
+- outdated webpack config
+- duplicated dependencies
+- separate Redux stores
+- conflicting utility functions
+
+Desired UX
+==========
+
+The app should feel:
+- enterprise,
+- rushed,
+- internally hacked together,
+- and barely stable.
+
+The happy path should work:
+1. add item
+2. apply coupon
+3. login with OTP
+4. place order
+5. reach success page
+
+Everything else should expose flaws.
+
+Output Requirements
+===================
+
+Generate:
+1. architecture overview
+2. folder structure
+3. docker-compose.yml
+4. Dockerfiles
+5. package.json files
+6. webpack configs
+7. Redux setup
+8. reducers/actions/constants
+9. Express routes
+10. postgres schema
+11. seed data
+12. vulnerable API endpoints
+13. brittle checkout flow
+14. broken routing assumptions
+15. race-condition-prone code
+16. insecure OTP implementation
+17. comments hinting at future fixes
+
+Important
+=========
+
+DO NOT modernize anything.
+DO NOT silently improve architecture.
+DO NOT fix race conditions.
+DO NOT normalize Redux state.
+DO NOT add proper authorization.
+DO NOT secure OTP handling.
+DO NOT sanitize HTML.
+DO NOT debounce requests.
+DO NOT add idempotency protections.
+DO NOT improve resilience.
+
+This project must resemble:
+- a real legacy enterprise checkout system,
+- with authentic technical debt,
+- partial microfrontend migration,
+- rushed business requirements,
+- and severe architectural drift.

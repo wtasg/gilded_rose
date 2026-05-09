@@ -1,0 +1,133 @@
+CHECKOUT MICRO-FRONTEND AUDIT NOTES
+===================================
+Date started: 2026-05-09
+Status: Partial. Needs another pass before implementation.
+
+Scope reviewed:
+- shell/
+- checkout-cart-mf/
+- otp-auth-mf/
+- backend/
+- postgres/
+- docker-compose.yml
+
+Summary
+-------
+The checkout works on the basic demo path, but there are several stability
+and security concerns. Most of the problems come from the old microfrontend
+loading style, shared browser globals, and the API accepting whatever the
+browser sends.
+
+Priority should probably be:
+1. Make startup more reliable.
+2. Clean up OTP.
+3. Stop duplicate orders.
+4. Rework Redux state.
+5. Add better route handling.
+
+Findings
+--------
+
+1. Shell remote loading is fragile
+Files:
+- shell/src/index.js
+- shell/webpack.config.js
+
+The shell injects remote script tags and assumes `window.CheckoutCartMF` and
+`window.OtpAuthMF` will be available soon enough. Network failures are only
+logged. There is no retry or fallback UI.
+
+Potential fix:
+Replace the script-tag loading with a small loader that tracks loading,
+loaded, and failed states. Add a retry button and avoid mounting until the
+remote global exists.
+
+2. Browser globals are used for auth and cart state
+Files:
+- shell/src/index.js
+- checkout-cart-mf/src/actions/cartActions.js
+- otp-auth-mf/src/actions/otpActions.js
+
+The app uses `window.__USER__`, `window.cartData`, and
+`window.currentOtpRequest`. This causes refresh and tab problems.
+
+Potential fix:
+Move shared state into one owner. Maybe the shell can own auth/cart and pass
+callbacks into the remotes. Longer term, use a shared API contract.
+
+3. OTP has several problems
+Files:
+- backend/server.js
+- otp-auth-mf/src/actions/otpActions.js
+- otp-auth-mf/src/reducers/otpReducer.js
+
+OTP can be resent quickly and sessions overwrite each other. The bypass OTP
+is hardcoded. OTP values are stored in localStorage and shown in the UI.
+
+Potential fix:
+Remove the bypass, keep OTP only server-side, and block resend for a short
+period. Add an expiry check.
+
+4. Duplicate order risk
+Files:
+- checkout-cart-mf/src/actions/cartActions.js
+- backend/server.js
+
+The place-order button can submit multiple requests. The backend inserts each
+request as a new order.
+
+Potential fix:
+Disable the button while saving and add an idempotency key.
+
+5. Direct URL access does not work
+Files:
+- shell/webpack.config.js
+- shell/src/index.js
+
+`historyApiFallback` is disabled. Some routes also depend on `location.state`.
+Refreshing nested routes can show a blank page or 404.
+
+Potential fix:
+Enable a server fallback and make each route load required data by ID instead
+of relying on prior route state.
+
+6. API trusts frontend totals
+Files:
+- backend/server.js
+
+The order API accepts subtotal, total, prices, and coupon values from the
+client. This can be changed in DevTools.
+
+Potential fix:
+Server should recalculate totals from product IDs, quantities, and server-side
+coupon rules.
+
+7. Some XSS exposure
+Files:
+- checkout-cart-mf/src/components/CartApp.js
+- postgres/seed.sql
+
+Product names, descriptions, and coupon messages are rendered as HTML.
+
+Potential fix:
+Render text by default. If HTML is required, sanitize it first.
+
+8. Redux shape is hard to work with
+Files:
+- checkout-cart-mf/src/reducers/cartReducer.js
+- otp-auth-mf/src/reducers/otpReducer.js
+
+State is deeply nested and mutable. Some non-serializable values are stored.
+
+Potential fix:
+Flatten state gradually and remove Date/Promise values from state.
+
+Notes for later
+---------------
+- Docker healthchecks are unreliable.
+- Backend logs sensitive values.
+- There may be authorization issues around order lookup.
+- Coupon logic needs a fuller review.
+- Admin route should be checked.
+- Need tests after cleanup.
+
