@@ -1,10 +1,12 @@
 # gilded_rose
 
-Regular practice exercises.
+My personal (ir)regular practice exercises and solutions.
 
 - Regular
 - Exercises
 - Regularly solve problems in different ways.
+
+**Why Gilded Rose?**
 
 > I came to know about getting better at programming via coding kata.
 >
