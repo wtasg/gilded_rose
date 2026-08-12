@@ -7,15 +7,11 @@
 
 ## NLTK
 
-[Install NLTK](https://www.nltk.org/install.html) | [Download NLTK Data](https://www.nltk.org/data.html) | [gh repo](https://github.com/nltk/nltk)
-
-
+[Install NLTK](https://www.nltk.org/install.html) | [Download NLTK Data](https://www.nltk.org/data.html) | [gh repo](https://github.com/nltk/nltk) | [NLTK Book](https://www.nltk.org/book/)
 
 ## NLP.STANFORD
 
 [gh org](https://github.com/stanfordnlp/) | [Stanford NLP group](https://nlp.stanford.edu/)
-
-
 
 ## Misc
 
