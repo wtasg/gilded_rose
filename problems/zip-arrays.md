@@ -1,4 +1,4 @@
-# Daily Problems for 2026.06.15
+# Zip Arrays
 
 1. Zip two arrays.
 2. Zip two strings.
