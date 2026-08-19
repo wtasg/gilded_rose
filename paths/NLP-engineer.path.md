@@ -401,7 +401,7 @@ A first-principles, systems-focused curriculum designed to take an experienced s
 
 ### Resources
 * [Megatron-LM (NVIDIA)](https://github.com/NVIDIA/Megatron-LM)
-* [DeepSpeed (Microsoft)](https://github.com/deepspeedtrain/DeepSpeed)
+* [DeepSpeed (Microsoft)](https://github.com/deepspeedai/DeepSpeed)
 * [PyTorch FSDP Tutorial](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html)
 
 ---
