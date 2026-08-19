@@ -453,7 +453,7 @@ A first-principles, systems-focused curriculum designed to take an experienced s
 
 ### Resources
 * [NeMo Guardrails (NVIDIA)](https://github.com/NVIDIA/NeMo-Guardrails)
-* [Llama Guard (Meta)](https://github.com/meta-llama/llama-guard)
+* [Llama Guard (Meta)](https://github.com/meta-llama/PurpleLlama)
 
 ---
 
