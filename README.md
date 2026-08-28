@@ -26,3 +26,7 @@ Also known as `how to git gud`
 4. Fast is better; than non-working high-quality code.
 5. Ugly is better; than non-working clean-code.
 6. Bruteforce is better; than not solving a problem.
+
+## Resources
+
+1. [Tim Roughgarden YT channel](https://www.youtube.com/@timroughgardenlectures1861/playlists)
