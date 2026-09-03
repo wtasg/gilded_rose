@@ -1,5 +1,6 @@
 # Walking the path of an NLP Engineer
 
+0. Foundations: maths, papers, books
 1. nltk
 2. nlp.standford
 3. ???
@@ -16,3 +17,9 @@
 ## Misc
 
 1. [YouTube - HuggingFace course - Why is NLP challenging?](https://www.youtube.com/watch?v=iNzlxWUAjd4) | [hf course](https://huggingface.co/learn/llm-course/chapter1/2)
+
+---
+
+## Notes
+
+1. [Scalars, Vectors, Matrices, Tensors](/lessons/scalars-vectors-matrices-tensors.md)

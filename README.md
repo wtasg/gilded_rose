@@ -30,3 +30,4 @@ Also known as `how to git gud`
 ## Resources
 
 1. [Tim Roughgarden YT channel](https://www.youtube.com/@timroughgardenlectures1861/playlists)
+2. [3B1b website](https://www.3blue1brown.com/) | [3B1B YT channel](https://www.youtube.com/c/3blue1brown)
