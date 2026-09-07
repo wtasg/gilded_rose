@@ -1,6 +1,5 @@
 # Mathematical Reference: Scalars, Vectors, Matrices, and Tensors
 
-
 | Term | Order (Axes) | Mathematical Notation | Description | Concrete Example |
 | :--- | :--- | :--- | :--- | :--- |
 | **Scalar** | 0 | $s \in \mathbb{R}$ | A single scalar value with no axes. | A loss value: $0.42$ |
@@ -18,8 +17,6 @@ A scalar $s \in F$ is an element of a scalar field $F$ (typically the real field
 
 $$s \cdot \vec{v} \in V \quad \text{for } s \in F, \; \vec{v} \in V$$
 
-
-
 ---
 
 ## 2. Vectors (Order-1 Tensors)
@@ -36,14 +33,11 @@ Coordinate representation: $\vec{x} \in F^n$, conventionally written as a column
 * Additive Identity: $\vec{v} + \vec{0} = \vec{v}$
 * Additive Inverse: $\vec{v} + (-\vec{v}) = \vec{0}$
 
-
 * **Scalar Multiplication Closure ($\cdot$):** $c \in F, \vec{v} \in V \implies c\vec{v} \in V$
 * Distributivity over vector addition: $c(\vec{u} + \vec{v}) = c\vec{u} + c\vec{v}$
 * Distributivity over scalar addition: $(c + d)\vec{v} = c\vec{v} + d\vec{v}$
 * Compatibility: $c(d\vec{v}) = (cd)\vec{v}$
 * Multiplicative Identity: $1\vec{v} = \vec{v}$ (for $1 \in F$)
-
-
 
 ### b. Products and Operations on Vectors
 
@@ -51,22 +45,17 @@ Coordinate representation: $\vec{x} \in F^n$, conventionally written as a column
 * Real ($\mathbb{R}^n$): $\langle \vec{u}, \vec{v} \rangle = \vec{u}^T \vec{v} = \sum_{i=1}^n u_i v_i \in \mathbb{R}$ *(Often called the dot product in this real case)*.
 * Complex ($\mathbb{C}^n$): $\langle \vec{u}, \vec{v} \rangle = \vec{u}^* \vec{v} = \sum_{i=1}^n \overline{u_i} v_i \in \mathbb{C}$
 
-
 * **Outer Product:** Maps two vectors to a rank-1 matrix (rank is 0 if either vector is $\vec{0}$):
 
 $$\vec{u} \in F^m, \vec{v} \in F^n \implies \vec{u}\vec{v}^T \in F^{m \times n}, \quad (\vec{u}\vec{v}^T)_{ij} = u_i v_j$$
-
 
 * **Hadamard Product ($\odot$):** Element-wise product yielding a vector:
 
 $$\vec{u}, \vec{v} \in F^n \implies \vec{u} \odot \vec{v} \in F^n, \quad (\vec{u} \odot \vec{v})_i = u_i v_i$$
 
-
 * **Cross Product ($\times$):** A binary operation strictly dependent on the Euclidean metric and orientation, mapping $\mathbb{R}^3 \times \mathbb{R}^3 \to \mathbb{R}^3$:
 
 $$\vec{u} \times \vec{v} = -(\vec{v} \times \vec{u}), \quad \langle \vec{u} \times \vec{v}, \vec{u} \rangle = 0, \quad \langle \vec{u} \times \vec{v}, \vec{v} \rangle = 0$$
-
-
 
 ### c. Norms & Induced Metrics (on $V = \mathbb{R}^n$ or $\mathbb{C}^n$)
 
@@ -92,11 +81,9 @@ A matrix $A \in F^{m \times n}$ is a 2D rectangular array of scalars. Once bases
 
 $$A\vec{x} = \sum_{j=1}^n x_j \vec{a}_j = \vec{b} \in F^m$$
 
-
 * **Row-Vector Product:** Given a $1 \times m$ row vector $\vec{y}^T$, the product is a linear combination of matrix rows $\vec{a}_{i, :}^T$:
 
 $$\vec{y}^T A = \sum_{i=1}^m y_i \vec{a}_{i, :}^T \in F^{1 \times n}$$
-
 
 * **Eigenvalues & Eigenvectors:** For square $A \in F^{n \times n}$, a non-zero $\vec{v} \neq \vec{0}$ and scalar $\lambda \in F$ (if the eigenvalue exists in field $F$) satisfying $A\vec{v} = \lambda\vec{v}$.
 
@@ -117,10 +104,7 @@ Defined when inner dimensions match: $A_{m \times k} B_{k \times n} = C_{m \time
 
 $$A A^{-1} = A^{-1} A = I_n$$
 
-
 * Product Inverse: $(AB)^{-1} = B^{-1} A^{-1}$
-
-
 
 ### d. Structural Matrix Classifications
 
@@ -148,7 +132,6 @@ Given $\mathcal{A} \in F^{I_1 \times \dots \times I_M}$ and $\mathcal{B} \in F^{
 
 $$(\mathcal{A} \otimes \mathcal{B})_{i_1 \dots i_M j_1 \dots j_N} = a_{i_1 \dots i_M} b_{j_1 \dots j_N}$$
 
-
 * **Tensor Contraction:**
 Summing over specific shared indices across modes. In Einstein notation, valid repeated indices conventionally indicate this contraction (e.g., $C_{i k} = A_{i j} B_{j k}$).
 * **Mode-$n$ Product ($\times_n$):**
@@ -164,12 +147,10 @@ Factorizes tensor $\mathcal{X}$ into a sum of $R$ rank-1 components. If $R$ is t
 
 $$\mathcal{X} = \sum_{r=1}^R \lambda_r \left( \vec{a}_r^{(1)} \otimes \vec{a}_r^{(2)} \otimes \dots \otimes \vec{a}_r^{(N)} \right)$$
 
-
 * **Tucker Decomposition:**
 Expresses tensor $\mathcal{X}$ via a dense core tensor $\mathcal{G}$ multiplied by factor matrices along each mode (e.g., HOSVD commonly uses orthonormal factors, though general Tucker factors need not be orthogonal):
 
 $$\mathcal{X} = \mathcal{G} \times_1 U^{(1)} \times_2 U^{(2)} \dots \times_N U^{(N)}$$
-
 
 * **Tensor Train (TT) / Matrix Product State (MPS):**
 Decomposes an order-$N$ tensor into a contracted linear chain of order-3 core tensors. TT can represent a tensor exactly, and can mitigate exponential storage growth when TT-ranks remain small:
@@ -576,8 +557,8 @@ np.linalg.norm(x)      # vector norm
 x.reshape(...)          # change shape
 ```
 
-
 ---
 
-#ai/chatgpt
-#ai/gemini
+# ai/chatgpt
+
+# ai/gemini

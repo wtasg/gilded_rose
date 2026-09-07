@@ -23,3 +23,9 @@
 ## Notes
 
 1. [Scalars, Vectors, Matrices, Tensors](/lessons/scalars-vectors-matrices-tensors.md)
+
+---
+
+## Problem Sets
+
+1. [Week 1](/problems/nlp-engineer-week-1.md)
