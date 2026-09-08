@@ -1251,3 +1251,5 @@ google-services.json
 # uploads and certificates
 server/node-server-app/uploads/
 server/node-server-app/images/
+
+media/
