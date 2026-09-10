@@ -51,11 +51,31 @@ Compare `float32` and `float64` for ML workloads. Discuss memory usage, precisio
 
 ### 11. Numerical stability
 
-Why is the naive softmax implementation
+Why is the naive softmax implementation `exp(x) / sum(exp(x))` numerically unsafe for large positive values?
 
-`exp(x) / sum(exp(x))`
+```python
+>>> import math
+>>> math.exp(0)
+1.0
+>>> math.exp(1)
+2.718281828459045
+>>> math.exp(10)
+22026.465794806718
+>>> math.exp(100)
+2.6881171418161356e+43
+>>> math.exp(1000)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+OverflowError: math range error
 
-numerically unsafe for large positive values? Derive the stable form using `x - max(x)` and explain why subtracting the same constant does not change the final probabilities.
+>>> 2**32 > math.exp(100)
+False
+
+```
+
+Exponential function `exp` grows too fast, even when x = 100, the value it produces is out of 32 bit range. The naive softmax implementation is not stable, the internal exp values are approaching infinity for relatively smaller values thus turning the entire function outcome unusable.
+
+Q: Derive the stable form using `x - max(x)` and explain why subtracting the same constant does not change the final probabilities.
 
 ## Python / NumPy
 
@@ -70,6 +90,26 @@ Write a NumPy function `describe(x)` that prints:
 - whether the array is C-contiguous
 
 Do not use any third-party library other than NumPy.
+
+```python
+import numpy as np
+
+def describe(x):
+    """
+    Print basic information about a NumPy array.
+
+    Parameters
+    ----------
+    x : array-like
+        Input to be converted to a NumPy array.
+    """
+    arr = np.asarray(x)
+    print(f"shape:              {arr.shape}")
+    print(f"ndim:               {arr.ndim}")
+    print(f"size:               {arr.size}")
+    print(f"dtype:              {arr.dtype}")
+    print(f"C-contiguous:       {arr.flags['C_CONTIGUOUS']}")
+```
 
 ### 13. Tensor shape transformations
 
@@ -99,6 +139,12 @@ b = np.zeros((768,))
 
 Write the expression that adds `b` to every token embedding in `x`. Then write a second example that adds one value per token position using a tensor of shape `(128,)`.
 
+```python
+x + b
+
+x + np.ones((1, 128, 1))
+```
+
 ### 15. Matrix multiplication
 
 Create:
@@ -109,6 +155,19 @@ x = np.array([1, 2, 3, 4])
 ```
 
 Compute `Ax` using NumPy. Then verify the result manually with the definition of matrix multiplication using a short Python loop.
+
+```python
+A@x
+
+# or
+
+np.matmul(A, x)
+
+# or
+
+A.dot(x) # it works but icky for matrices.
+
+```
 
 ### 16. Batch linear transformation
 
